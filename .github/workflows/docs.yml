@@ -4,10 +4,10 @@ on:
   push:
     branches: [main]
     paths: ["docs/**", "mkdocs.yml", ".github/workflows/docs.yml"]
+  workflow_dispatch:
 
 permissions:
-  pages: write
-  id-token: write
+  contents: write
 
 concurrency:
   group: pages
@@ -15,19 +15,15 @@ concurrency:
 
 jobs:
   deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install "mkdocs-material>=9.5"
-      - run: mkdocs build --strict
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: site
-      - uses: actions/deploy-pages@v4
-        id: deployment
+      - run: pip install "mkdocs-material>=9.5" "mkdocs>=1.6"
+      - name: Deploy docs to gh-pages branch
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          mkdocs gh-deploy --force
