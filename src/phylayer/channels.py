@@ -68,6 +68,17 @@ def multipath(x: np.ndarray, taps: np.ndarray) -> np.ndarray:
     return np.convolve(np.asarray(x), np.asarray(taps))
 
 
+def multipath_symbol(x: np.ndarray, taps: np.ndarray, sps: int) -> np.ndarray:
+    """Symbol-spaced tap-delay-line channel applied to an oversampled waveform.
+
+    Equivalent TDL models (3GPP EPA/EVA/ETU style) space taps on the symbol
+    grid, which is what the receiver's symbol-rate channel estimate sees.
+    """
+    T = np.zeros((taps.size - 1) * sps + 1, dtype=complex)
+    T[::sps] = taps
+    return np.convolve(np.asarray(x), T)
+
+
 def carrier_offset(
     x: np.ndarray, cfo_norm: float, phase0: float = 0.0
 ) -> np.ndarray:
