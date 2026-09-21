@@ -2,6 +2,7 @@
 exp05, not here)."""
 
 import numpy as np
+import pytest
 
 from phylayer.iqdata import CLASSES, generate_dataset, iq_to_tensor, make_iq_sample
 
@@ -37,7 +38,7 @@ def test_iq_to_tensor_layout():
 
 
 def test_amcnet_forward():
-    import torch
+    torch = pytest.importorskip("torch")
 
     from phylayer.amc import AMCNet
     m = AMCNet(n_classes=5)
