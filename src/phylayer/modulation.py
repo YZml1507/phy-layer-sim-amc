@@ -108,6 +108,15 @@ class Modem:
         shifts = np.arange(width - 1, -1, -1)
         return ((gray[:, None] >> shifts) & 1).astype(np.int64)
 
+    def nearest(self, symbols: np.ndarray) -> np.ndarray:
+        """Nearest constellation point per symbol (decision device)."""
+        symbols = np.asarray(symbols).ravel()
+        if self.order == 2:
+            return np.where(symbols.real > 0, 1.0, -1.0)
+        i_idx = self._decide_axis(symbols.real)
+        q_idx = self._decide_axis(symbols.imag)
+        return (self._levels[i_idx] + 1j * self._levels[q_idx]) * self._scale
+
     def demodulate_llr(self, symbols: np.ndarray, noise_var: float) -> np.ndarray:
         """Exact per-bit log-likelihood ratios (positive LLR => bit = 0).
 
@@ -117,8 +126,8 @@ class Modem:
         """
         symbols = np.asarray(symbols).ravel()
         if self.order == 2:
-            # BPSK LLR = 2*Re(y)/sigma^2 per real component
-            return (2.0 * symbols.real / noise_var).astype(np.float64)
+            # bit 0 -> s=-1, bit 1 -> s=+1; LLR(+=>0) = -4 Re(y)/E|n|^2
+            return (-4.0 * symbols.real / noise_var).astype(np.float64)
         half = self.bits_per_symbol // 2
         i_llr = self._axis_llr(symbols.real, noise_var, half)
         q_llr = self._axis_llr(symbols.imag, noise_var, half)
@@ -133,13 +142,14 @@ class Modem:
         gray = _gray_encode(idx)
         shifts = np.arange(width - 1, -1, -1)
         bit_of_level = (gray[None, :] >> shifts[:, None]) & 1  # (width, m_pam)
+        # axis noise variance = noise_var/2; LLR(+=>0) = lse(-d2_0/s2)-lse(-d2_1/s2)
+        axis_var = noise_var / 2.0
         llr_cols = []
         for b in range(width):
             d2_0 = d2[:, bit_of_level[b] == 0]
             d2_1 = d2[:, bit_of_level[b] == 1]
-            # LLR = log P(b=0|x)/P(b=1|x) = (min over sets) via logsumexp
             llr_cols.append(
-                logsumexp(-d2_1 / noise_var, axis=1) - logsumexp(-d2_0 / noise_var, axis=1)
+                logsumexp(-d2_0 / axis_var, axis=1) - logsumexp(-d2_1 / axis_var, axis=1)
             )
         return np.stack(llr_cols, axis=1)
 
