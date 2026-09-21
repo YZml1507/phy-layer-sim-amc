@@ -1,0 +1,59 @@
+site_name: PHY-Layer-Sim-AMC 讲解文档
+site_description: 数字通信物理层全链路仿真 + 深度学习调制识别 —— 逐模块原理讲解
+repo_url: https://github.com/YZml1507/phy-layer-sim-amc
+docs_dir: docs
+
+theme:
+  name: material
+  language: zh
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      toggle:
+        icon: material/brightness-7
+        name: 深色模式
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      toggle:
+        icon: material/brightness-4
+        name: 浅色模式
+  features:
+    - navigation.sections
+    - navigation.top
+    - toc.follow
+    - content.code.copy
+
+nav:
+  - 首页: index.md
+  - 模块讲解:
+    - 01 总览与架构: modules/01-overview.md
+    - 02 数字调制与解调: modules/02-modulation.md
+    - 03 脉冲成型与匹配滤波: modules/03-pulse-shaping.md
+    - 04 信道编码与 Viterbi 译码: modules/04-coding.md
+    - 05 信道模型: modules/05-channels.md
+    - 06 同步（定时/载波）: modules/06-synchronization.md
+    - 07 均衡: modules/07-equalization.md
+    - 08 OFDM 收发机: modules/08-ofdm.md
+    - 09 信道估计: modules/09-channel-estimation.md
+    - 10 AMC 调制识别: modules/10-amc.md
+  - 面试手册:
+    - 追问预判与应答: interview/qa-handbook.md
+    - 简历与 PPT 素材: interview/resume-ppt.md
+
+markdown_extensions:
+  - admonition
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.highlight
+  - pymdownx.superfences
+  - pymdownx.details
+  - toc:
+      permalink: true
+
+extra_javascript:
+  - javascripts/katex.js
+  - https://unpkg.com/katex@0/dist/katex.min.js
+  - https://unpkg.com/katex@0/dist/contrib/auto-render.min.js
+
+extra_css:
+  - https://unpkg.com/katex@0/dist/katex.min.css
