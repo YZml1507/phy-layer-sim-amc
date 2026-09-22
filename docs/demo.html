@@ -68,8 +68,8 @@ img.shot{width:100%;border-radius:6px;border:1px solid var(--line)}
 </aside>
 <main class="grid">
 <div class="card"><h3>星座图（接收端采样点）</h3><p>灰点=理想星座，亮点=均衡前，绿点=均衡后/判决点。拖 SNR 看点云散开；拖 CFO 看星座整体旋转；开多径看 ISI 拖尾。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="stat"><span>误符号率 SER: <b id="ser">—</b></span><span>误码率 BER: <b id="ber">—</b></span><span>EVM: <b id="evm">—</b></span></div></div>
-<div class="card"><h3>眼图（匹配滤波输出实部）</h3><p>把波形按 2 个符号周期切片叠画。眼睛张开度=定时+噪声+ISI 余量。拖 β 看眼皮厚薄；加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
-<div class="card"><h3>BER vs Eb/N0（理论曲线 + 当前实测点）</h3><p>线=理论公式，红点=当前参数下 4096 符号实测。验证"仿真压在理论上"。</p><canvas id="cvBer" width="640" height="360"></canvas></div>
+<div class="card"><h3>眼图（匹配滤波输出实部）</h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量。拖 β 看眼皮厚薄；加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
+<div class="card"><h3>BER vs SNR（理论瀑布线 + 当前实测点）</h3><p>x 轴=Es/N0（同滑块），线=该调制 AWGN 理论公式，红点=4096 符号实测；红点在纯 AWGN 下应压在线上，加损伤后偏离多少就是多少代价（Δ 标注）。0 错误时按置信上界标出。</p><canvas id="cvBer" width="640" height="360"></canvas></div>
 <div class="card"><h3>多径冲激响应 |h[n]|</h3><p>当前信道抽头；多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
 </main>
 </div>
@@ -96,9 +96,7 @@ function rrcTaps(beta,span,sps){
   for(let i=0;i<=n;i++){const t=(i-n/2)/sps;let v;
     if(Math.abs(t)<1e-9)v=1-beta+4*beta/Math.PI;
     else if(Math.abs(Math.abs(t)-1/(4*beta))<1e-6){
-      const a=Math.PI/(2*Math.sqrt(2)),b=2/Math.PI;
-      v=(beta/Math.sqrt(2))*((1+2/Math.PI)*Math.sin(a)+(1-2/Math.PI)*Math.cos(a));
-      // 标准教科书闭式
+      // t=±1/(4β) 奇异点，用标准教科书闭式极限值
       v=(beta/Math.sqrt(2))*((1+2/Math.PI)*Math.sin(Math.PI/(4*beta))+(1-2/Math.PI)*Math.cos(Math.PI/(4*beta)));
     } else {
       const num=Math.sin(Math.PI*t*(1-beta))+4*beta*t*Math.cos(Math.PI*t*(1+beta));
@@ -193,7 +191,7 @@ function simulate(p){
     evm+=cabs2(C(t.r-s.r,t.i-s.i));
   }
   const nE=Math.min(decided.length,NS);
-  return{sch,syms,dec,eq,taps,eye,ser:ser/nE,ber:ber/(nE*sch.k),evm:Math.sqrt(evm/nE)};
+  return{sch,syms,dec,eq,taps,eye,nE,ser:ser/nE,ber:ber/(nE*sch.k),evm:Math.sqrt(evm/nE)};
 }
 // MMSE 均衡（复数版）：w = (H^H H + σ²I)^{-1} H^H e_d，全延迟扫取残差最小
 function mmseEqC(x,taps,Lw,sig2){
@@ -262,10 +260,8 @@ function drawConst(res,p){
     const pad=26,R=Math.min(W,H)/2-pad,cx=W/2,cy=H/2;
     const sc=R/1.7;
     axes(g,W,H,pad);
-    // 理想星座
-    g.fillStyle="#484f58";
-    for(const pt of res.sch.pts){g.beginPath();g.arc(cx+pt.r*sc,cy-pt.i*sc,5,0,7);g.fill();}
-    // 接收点（子采样显示）
+    // 接收点（子采样显示），钳制在坐标区内
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
     const pts=p.eq?res.eq:res.dec;
     g.fillStyle=p.eq?"rgba(63,185,80,.55)":"rgba(88,166,255,.5)";
     for(let i=0;i<pts.length;i+=2){const z=pts[i];
@@ -274,14 +270,20 @@ function drawConst(res,p){
     if(p.eq&&res.dec){g.fillStyle="rgba(88,166,255,.25)";
       for(let i=0;i<res.dec.length;i+=3){const z=res.dec[i];
         g.beginPath();g.arc(cx+z.r*sc,cy-z.i*sc,1.4,0,7);g.fill();}}
+    g.restore();
+    // 理想星座画最上层作参照
+    g.fillStyle="#484f58";
+    for(const pt of res.sch.pts){g.beginPath();g.arc(cx+pt.r*sc,cy-pt.i*sc,5,0,7);g.fill();}
   });
 }
 function drawEye(res){
   draw(document.getElementById("cvEye"),(g,W,H)=>{
     const pad=10,cy=H/2,seg=2*SPS,win=seg*40;
-    const start=res.eye.gd+10*SPS;
-    const mx=Math.max(...res.eye.r.slice(start,start+win).map(Math.abs),0.5);
+    // 每个 2T 窗以符号判决时刻为中心 → 理想采样点在图中央
+    const start=res.eye.gd+10*SPS-SPS;
+    const mx=Math.max(...res.eye.r.slice(start,start+win+seg).map(Math.abs),0.5);
     axes(g,W,H,pad);
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
     g.strokeStyle="rgba(88,166,255,.6)";g.lineWidth=1;
     for(let s=0;s+seg<win;s+=seg){
       g.beginPath();
@@ -289,6 +291,10 @@ function drawEye(res){
         const x=pad+(W-2*pad)*i/seg,y=cy-v*(H/2-pad);
         i?g.lineTo(x,y):g.moveTo(x,y);}
       g.stroke();}
+    g.restore();
+    // 理想采样时刻（判决点）虚线
+    g.strokeStyle="rgba(248,81,73,.55)";g.setLineDash([4,4]);g.beginPath();
+    g.moveTo(W/2,pad);g.lineTo(W/2,H-pad);g.stroke();g.setLineDash([]);
   });
 }
 function drawChan(res){
@@ -322,24 +328,71 @@ function erfc(x){ // 近似
   return x>=0?v:2-v;}
 function drawBer(res,p){
   draw(document.getElementById("cvBer"),(g,W,H)=>{
-    const pad=40,x0=-4,x1=26;
+    // x 轴 = Es/N0，范围与滑块全域一致 → 实测点水平方向永不出界
+    const pad=46,x0=-4,x1=30,ymin=1e-6,ymax=1;
     const xs=v=>pad+(W-2*pad)*(v-x0)/(x1-x0);
-    const ys=v=>{const l=Math.log10(Math.max(v,1e-6));return H-pad-(H-2*pad)*(l-Math.log10(1e-6))/(0-Math.log10(1e-6));};
-    axes(g,W,H,pad);
-    g.fillStyle="#8b949e";g.font="10px monospace";
-    for(const e of[0,10,20])g.fillText(e+"dB",xs(e)-8,H-pad+14);
-    for(const e of[-1,-3,-5])g.fillText("1e"+e,4,ys(Math.pow(10,e))+3);
-    // 理论曲线
-    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();
-    for(let e=x0;e<=x1;e+=0.5){const b=theoryBer(res.sch,e+10*Math.log10(res.sch.k));
-      const x=xs(e),y=ys(Math.max(b,1e-6));e===x0?g.moveTo(x,y):g.lineTo(x,y);}
+    const lys=v=>Math.log10(Math.min(Math.max(v,ymin),ymax));
+    const ys=v=>H-pad-(H-2*pad)*(lys(v)-lys(ymin))/(lys(ymax)-lys(ymin));
+    const k2db=10*Math.log10(res.sch.k);
+    const clampX=v=>Math.min(Math.max(v,pad),W-pad);
+    const clampY=v=>Math.min(Math.max(v,pad),H-pad);
+    // 网格与刻度
+    g.strokeStyle="#21262d";g.lineWidth=1;g.beginPath();
+    for(let e=0;e<=x1;e+=5){g.moveTo(xs(e),pad);g.lineTo(xs(e),H-pad);}
+    for(const e of[0,-1,-2,-3,-4,-5,-6]){const y=ys(Math.pow(10,e));g.moveTo(pad,y);g.lineTo(W-pad,y);}
     g.stroke();
-    // 实测点：Es/N0 -> Eb/N0
-    const ebn0=p.snr-10*Math.log10(res.sch.k);
-    g.fillStyle="#f85149";g.beginPath();
-    g.arc(xs(ebn0),ys(Math.max(res.ber,1e-6)),6,0,7);g.fill();
-    g.fillStyle="#e6edf3";g.font="11px monospace";
-    g.fillText("实测 BER="+res.ber.toExponential(1),xs(ebn0)+10,ys(Math.max(res.ber,1e-6)));
+    g.strokeStyle="#30363d";g.strokeRect(pad,pad,W-2*pad,H-2*pad);
+    g.fillStyle="#8b949e";g.font="10px monospace";
+    for(let e=0;e<=x1;e+=5)g.fillText(e==0?"0":e+"",xs(e)-7,H-pad+14);
+    g.fillText("Es/N0 (dB)",W/2-24,H-6);
+    for(const e of[0,-1,-2,-3,-4,-5,-6])g.fillText("1e"+e,6,ys(Math.pow(10,e))+3);
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
+    // 理论曲线：轴是 Es/N0，公式吃 Eb/N0 → ebn0=e-10log10(k)；低于 ymin 段不画（瀑布线自然出界）
+    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();
+    let pen=false;
+    for(let e=x0;e<=x1;e+=0.25){const b=theoryBer(res.sch,e-k2db);
+      if(b<ymin){pen=false;continue;}
+      const x=xs(e),y=ys(Math.min(b,ymax));
+      pen?g.lineTo(x,y):g.moveTo(x,y);pen=true;}
+    g.stroke();
+    // 实测点：x 严格等于滑块值；垂直虚线连到理论曲线，标注 SNR 差距
+    const mx=clampX(xs(p.snr));
+    const thAtX=theoryBer(res.sch,p.snr-k2db);
+    if(res.ber>0){
+      const my=clampY(ys(res.ber));
+      // ΔSNR：同 BER 下理论需要的 Es/N0（二分反解）；ber 须落在曲线值域内
+      let dTxt="";
+      const thLo=theoryBer(res.sch,x0-k2db); // 曲线左端最大值
+      if(res.ber>ymin&&res.ber<thLo){
+        let lo=x0,hi=x1; // theoryBer 关于 e 单调降
+        for(let i=0;i<40;i++){const mid=(lo+hi)/2;
+          theoryBer(res.sch,mid-k2db)>res.ber?lo=mid:hi=mid;}
+        dTxt=" Δ≈"+((p.snr-(lo+hi)/2)>=0?"+":"")+(p.snr-(lo+hi)/2).toFixed(1)+"dB";
+      }
+      g.strokeStyle="rgba(248,81,73,.5)";g.setLineDash([3,3]);g.beginPath();
+      g.moveTo(mx,my);g.lineTo(mx,clampY(ys(Math.min(thAtX,ymax))));g.stroke();g.setLineDash([]);
+      g.fillStyle="#f85149";g.beginPath();g.arc(mx,my,5.5,0,7);g.fill();
+      g.fillStyle="#e6edf3";g.font="11px monospace";
+      const label="实测 "+res.ber.toExponential(1)+dTxt;
+      const tx=mx+9+label.length*6.6>W-pad?mx-9-label.length*6.6:mx+9;
+      g.fillText(label,tx,my+3);
+    }else{
+      // 0 错误：log 轴画不了 0，标空心下界点 BER<1/(N·k)
+      const my=H-pad-4;
+      g.strokeStyle="#f85149";g.lineWidth=1.5;g.beginPath();g.arc(mx,my,5.5,0,7);g.stroke();
+      g.beginPath();g.moveTo(mx,my+5.5);g.lineTo(mx,my+11);g.lineTo(mx-3.5,my+7.5);g.moveTo(mx,my+11);g.lineTo(mx+3.5,my+7.5);g.stroke();
+      g.fillStyle="#e6edf3";g.font="11px monospace";
+      const bound=(1/(res.nE*res.sch.k)).toExponential(1);
+      const label="实测 0 错 → BER<"+bound;
+      const tx=mx+9+label.length*6.6>W-pad?mx-9-label.length*6.6:mx+9;
+      g.fillText(label,tx,my-6);
+    }
+    g.restore();
+    // 图例
+    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();g.moveTo(pad+8,pad+12);g.lineTo(pad+30,pad+12);g.stroke();
+    g.fillStyle="#8b949e";g.font="10px sans-serif";g.fillText("理论",pad+34,pad+15);
+    g.fillStyle="#f85149";g.beginPath();g.arc(pad+72,pad+12,4,0,7);g.fill();
+    g.fillStyle="#8b949e";g.fillText("实测(4096符号)",pad+80,pad+15);
   });
 }
 // ---------- 主循环 ----------
@@ -352,14 +405,14 @@ function refresh(){
   seed=(Math.random()*1e9)|0;
   const p=params(),res=simulate(p);
   drawConst(res,p);drawEye(res);drawBer(res,p);drawChan(res);
-  $("ser").textContent=res.ser.toExponential(2);
-  $("ber").textContent=res.ber.toExponential(2);
+  $("ser").textContent=res.ser>0?res.ser.toExponential(2):"<"+(1/res.nE).toExponential(1);
+  $("ber").textContent=res.ber>0?res.ber.toExponential(2):"<"+(1/(res.nE*res.sch.k)).toExponential(1);
   $("evm").textContent=(res.evm*100).toFixed(1)+"%";
 }
 function labels(){
   $("vMod").textContent=$("mod").selectedOptions[0].text;
   $("vSnr").textContent=$("snr").value+" dB";
-  $("vCfo").textContent=($("cfo").value/1000*8e-4).toExponential(1);
+  $("vCfo").textContent=($("cfo").value/1e6*8).toExponential(1)+" 周/样点";
   $("vBeta").textContent=$("beta").value;
   $("vMp").textContent=$("mp").selectedOptions[0].text.split("（")[0];
   $("vDt").textContent=$("dt").value+" 样点";
@@ -368,6 +421,16 @@ for(const id of["mod","snr","cfo","beta","mp","dt","eq"]){
   $(id).addEventListener("input",()=>{labels();refresh();});
 }
 $("rerun").addEventListener("click",refresh);
+// URL hash 预设链路状态，可复现/分享，如 #mod=64qam&snr=-4&mp=severe&eq=1
+try{const hp=new URLSearchParams(location.hash.slice(1));
+  if(hp.get("mod"))$("mod").value=hp.get("mod");
+  if(hp.get("snr"))$("snr").value=hp.get("snr");
+  if(hp.get("cfo"))$("cfo").value=hp.get("cfo");
+  if(hp.get("beta"))$("beta").value=hp.get("beta");
+  if(hp.get("mp"))$("mp").value=hp.get("mp");
+  if(hp.get("dt"))$("dt").value=hp.get("dt");
+  if(hp.get("eq"))$("eq").checked=hp.get("eq")==="1";
+}catch(e){}
 labels();refresh();
 </script>
 </body>
