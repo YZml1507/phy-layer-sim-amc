@@ -2,7 +2,7 @@
 
 纯 Python(NumPy/SciPy)实现的**数字通信物理层全链路仿真平台**，外加一个
 **深度学习自动调制识别(AMC)** 模块。覆盖：信道编码、数字调制、脉冲成型、
-同步、均衡、OFDM(5G NR 风格参数)、信道估计，以及基于 1D-ResNet 的 I/Q
+同步、均衡、OFDM(802.11a 风格帧结构)、信道估计，以及基于 1D-ResNet 的 I/Q
 调制分类。
 
 讲解文档站(逐模块原理 → 代码走读 → 面试问答)：<https://yzml1507.github.io/phy-layer-sim-amc/>

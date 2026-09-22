@@ -27,7 +27,7 @@ $$
 z[n]=e^{-j\pi r n^2/N},\qquad n=0,\dots,N-1
 $$
 
-（LTE 主同步序列 PSS 同款）的循环自相关正好是理想冲激：
+（LTE 主同步序列 PSS 同款；要求根指数 $r$ 与长度 $N$ 互素）的循环自相关正好是理想冲激：
 
 $$
 R_{zz}[\tau]=\sum_n z[n]\,z^*[n-\tau]=\begin{cases}N & \tau=0\\0 & \tau\neq0\end{cases}
@@ -80,17 +80,17 @@ $$
 估计的原型）。去模糊范围 $|\Delta f|<1/(64\cdot sps)$，本项目 $8\times10^{-4}$
 远在范围内。
 
-**第 4 步 derotate**：整帧乘 $e^{-j2\pi\hat f k}$ 把残余旋转拧回去。
+**第 4 步 derotate**：符号级整帧乘 $e^{-j2\pi\hat f\,\mathrm{sps}\,k}$（$\hat f$ 单位是 cycles/sample，符号下标要乘 sps）把残余旋转拧回去。
 
-**第 5 步 estimate_channel_ls**：在长前导上解最小二乘 $y=Ph$（$P$ 是下
+**第 5 步 estimate_channel_ls**：在整段前导（短+长）上解最小二乘 $y=Ph$（$P$ 是下
 三角 Toeplitz，因为帧前面没有符号拖尾）。**踩过的坑**：参考信号必须用
 整个前导（短+长）——长前导前面挨着的是短前导不是零，模型里不把短前导
 尾部的泄漏写进去，残差就被当成噪声，$\hat\sigma^2$ 高估一个数量级，
 MMSE 均衡直接退化。
 
-**第 6 步 decision_directed_phase**：判决引导 Costas——逐符号硬判决到
-最近星座点，取残差相位 $\angle(z\cdot d^*)$ 以步长 $\alpha=0.15$ 累进
-跟踪。吃掉 CFO 估计残差和相位噪声这类"慢漂移"。
+**第 6 步 decision_directed_phase**：判决引导相位跟踪（判决反馈环
+DDPLL）——逐符号硬判决到最近星座点，取残差相位 $\angle(z\cdot d^*)$
+以步长 $\alpha=0.15$ 累进跟踪。吃掉 CFO 估计残差和相位噪声这类"慢漂移"。
 
 ## 代码走读（按调用顺序）
 
@@ -100,8 +100,9 @@ i0  = frame_detect(rx_wave, pre.short)       # 波形级互相关取峰 + 4*sps 
 z, d0 = locate_preamble(...)                # 相位网格搜索 + 首径定位
 fhat = estimate_cfo(rx_short, 32, sps)      # Moose: 两段相关取相角
 z = derotate(z, fhat)                       # 反旋转
-h, s2 = estimate_channel_ls(pre_rx, pre_tx) # Toeplitz lstsq
-z = decision_directed_phase(eq_out, modem.nearest)  # Costas 残余相位跟踪
+h = estimate_channel_ls(pre_rx, pre_tx, n_taps)  # Toeplitz lstsq, 只返回 h
+noise_var = mean(|pre_rx - conv(pre_tx, h)[:N]|^2)  # 拟合残差估计噪声方差
+z = decision_directed_phase(eq_out, modem.nearest)  # DDPLL 残余相位跟踪
 ```
 
 ## 面试可能怎么问
@@ -109,8 +110,10 @@ z = decision_directed_phase(eq_out, modem.nearest)  # Costas 残余相位跟踪
 - **为什么同步要分粗/细两级？** 粗同步要"弱信号也能检测到帧"（波形级
   匹配滤波，采样点精度）；细同步要"每个符号采在最佳点"（符号相位精度）。
   一个模块同时满足两者成本高、鲁棒差，所以分级。
-- **为什么 LTE/5G 都用 ZC 序列做同步？** 理想循环自相关 + 恒定包络 +
-  频域平坦（可兼作信道估计训练序列），还天然区分多径。
+- **为什么 LTE 用 ZC 序列做同步？** 理想循环自相关 + 恒定包络 +
+  频域平坦（可兼作信道估计训练序列），还天然区分多径——LTE PSS 就是
+  ZC63。注意 5G NR 的 PSS/SSS 用的是 m 序列/Gold 序列；NR 里 ZC 用在
+  PRACH 前导、DFT-s-OFDM 的 DM-RS 等处。
 - **CFO 估计的两段重复前导为什么好用？** 两段相同结构在 CFO 下的相位差
   正比于频偏和间距，一除就出来——Moose 方法，802.11a 的 CFO 原型。
 - **符号定时偏差一点点会怎样？** 在匹配滤波输出上采错位置 → 收的不是
@@ -118,7 +121,8 @@ z = decision_directed_phase(eq_out, modem.nearest)  # Costas 残余相位跟踪
 - **细同步找首径还是最强径？** 首径（帧起点语义）。最强径只是信道最强
   抽头，跟"帧从哪开始"不是一回事。
 - **CFO 大到超出模糊范围怎么办？** 先用更短的重复结构（间隔短 → 模糊
-  范围大）粗估，再细估——多级 CFO 估计，LTE 的 PSS/SSS 就是这个思路。
+  范围大）粗估，再细估——先粗后细的多级估计思路，LTE 同步也是这么
+  分层的（PSS/SSS 粗定时与粗 CFO，CP 相关与 CRS 做细跟踪）。
 - **为什么判决引导相位跟踪不会跑偏？** 判决正确时残差相位就是真实漂移
   的无偏估计；只要判决错误率不太高、漂移比符号率慢（CFO 残差/相位噪声
   满足），小步长累进就稳。这是**自适应均衡**思想的简化版。

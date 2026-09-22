@@ -80,8 +80,8 @@ Viterbi 做的是**最大似然序列检测**：枚举所有路径代价太大�
 一句话：**交织不改变错误数量，改变错误的时间分布**，使之匹配码的能力模型。
 
 ```python
-interleave(bits, rows)   # 写行读列
-deinterleave(llr, rows)  # 逆变换（对 LLR 做，保持软信息）
+interleaved, pad = interleave(bits, rows)   # 写行读列
+deinterleave(llr, rows, pad)                # 逆变换（对 LLR 做，保持软信息）
 ```
 
 ## 实验现象（exp03）
@@ -103,24 +103,25 @@ deinterleave(llr, rows)  # 逆变换（对 LLR 做，保持软信息）
 
 ```python
 enc = conv_encode(info_bits)          # 逐比特推进寄存器, 输出 g1,g2 两路, 末尾补 6 零
-enc_i = interleave(enc, rows)         # 交织
+enc_i, pad = interleave(enc, rows)    # 交织
 # ... 调制/信道/解调 得 llr ...
-llr_d = deinterleave(llr, rows)       # 先解交织再译码
+llr_d = deinterleave(llr, rows, pad)  # 先解交织再译码
 bits_hat = viterbi_decode(llr_d, soft=True)
 ```
 
 - `_TRELLIS`：预计算 64 状态 × 2 输入的 (next_state, out_bits) 查表；
 - `viterbi_decode`：前向累积度量 + 幸存者回溯，输入长度 $2(n+6)$、输出
   $n$ 个信息位；
-- `deinterleave` 里 `pad` 记住补了多少零位，译码前剥掉。
+- `interleave` 返回的 `pad` 记住尾部补了多少零位，`deinterleave` 译码前剥掉。
 
 ## 面试可能怎么问
 
 - **卷积码的状态数、约束长度、码率？** $K=7$（移位寄存器 6 级+当前输入），
   $2^{K-1}=64$ 状态，$R=1/2$。171/133 是行业标准的最优自由距码。
 - **什么是自由距离？** 任意两条合法路径的最小汉明距——码纠错能力的
-  本质度量；$d_{free}$ 越大，能纠的错越多（约 $\lfloor(d_{free}-1)/2\rfloor$
-  个）。
+  本质度量；$d_{free}$ 越大性能越好。限距离译码的保证纠错半径约
+  $\lfloor(d_{free}-1)/2\rfloor$；ML(Viterbi) 不受此硬上限，$d_{free}$
+  通过 $P_e\approx\sum a_d\,Q(\sqrt{2d\,R\,E_b/N_0})$ 决定渐近差错率。
 - **为什么软判决比硬判决好 ~2 dB？** 硬判决丢掉置信度，软判决让度量
   更准——自由距离的纠错潜力兑现更充分。
 - **交织解决什么问题？能不能不要？** 衰落信道错误成簇，交织把簇打散成

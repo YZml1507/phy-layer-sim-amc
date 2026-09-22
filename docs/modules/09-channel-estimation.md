@@ -22,8 +22,8 @@ $$
 \hat h=(X^H X)^{-1}X^H y
 $$
 
-物理图像：$h$ 有 $L$ 个未知抽头，训练段有 $N_{tr}$ 个观测——只要
-$N_{tr}\ge L$ 方程就超定，噪声被最小二乘"平均"掉一部分。实现用
+物理图像：$h$ 有 $L$ 个未知抽头，训练段有 $N_{tr}$ 个观测——$N_{tr}=L$
+时方程恰定、$N_{tr}>L$ 时超定，噪声被最小二乘"平均"掉一部分。实现用
 `np.linalg.lstsq`。
 
 **顺带的副产品——噪声方差估计**：拟合残差里只剩噪声，
@@ -41,8 +41,8 @@ $\hat\sigma^2$ 被高估 10 倍，MMSE 退化成"不敢动手"的懒均衡器。
 
 ### 频域 LS（OFDM 用）
 
-OFDM 训练符号每个载波 $X_k$ 已知：$\hat H_k = Y_k/X_k$——64 次除法
-代替解方程组，便宜得多；代价是每个载波独立估计、噪声不被平滑。
+OFDM 训练符号每个载波 $X_k$ 已知：$\hat H_k = Y_k/X_k$——62 个可用载波
+各自一次除法代替解方程组，便宜得多；代价是每个载波独立估计、噪声不被平滑。
 
 ### 降噪：IFFT-截断-FFT
 
@@ -66,7 +66,8 @@ $N-N_{cp}$ 份噪声能量——估计方差乘 $N_{cp}/N$（64→16 ≈ 降 6 d
 
 ```python
 # 单载波突发（模块 06 流水线里的一步）
-h_hat, noise_var = estimate_channel_ls(pre_rx, pre_tx_full, n_taps)
+h_hat = estimate_channel_ls(pre_rx, pre_tx_full, n_taps)  # 只返回 h
+noise_var = mean(|pre_rx - conv(pre_tx_full, h_hat)[:N_tr]|^2)  # 残差估噪声
 
 # OFDM（模块 08 流水线里的一步）
 H_ls = Y_tr / X_tr                      # 逐载波 LS
@@ -81,14 +82,14 @@ A：LS 只用已知序列解线性方程，不用信道统计先验，简单但�
 用信道二阶统计 $R_h$ 和噪声方差做维纳滤波
 $\hat h_{MMSE}=R_hX^H(XR_hX^H+\sigma^2I)^{-1}y$，性能更好但要知道信道
 先验（工程上不一定拿得到）。折中：LS + 时域截断/频域平滑——本项目
-OFDM 用的就是这个，等价于一种简单的"结构化 MMSE"。
+OFDM 用的就是这个，等价于利用时域稀疏先验的降秩/DFT 域估计。
 
 **Q：信道估计的噪声方差怎么顺手估计？**
 A：训练段拟合残差 $\mathrm{var}(y-X\hat h)$。副产品很实用：MMSE 均衡
 器、LLR 软解调都要它。
 
 **Q：训练序列有什么讲究？**
-A：自相关好（旁瓣低）→ $X^TX$ 条件数小、LS 稳定；恒模（CAZAC，如
+A：自相关好（旁瓣低）→ $X^H X$ 条件数小、LS 稳定；恒模（CAZAC，如
 ZC）→ 发射端 PAPR 友好。本项目单载波用 Zadoff–Chu，OFDM 训练符号
 用全载波 BPSK PN。
 
