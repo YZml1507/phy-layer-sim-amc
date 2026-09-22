@@ -18,15 +18,15 @@
 
 ```text
 信源比特 → 信道编码(卷积码) → 交织 → 数字调制(BPSK/QPSK/16QAM/64QAM)
-  → 成型滤波(根升余弦 RRC) → 上采样
+  → 上采样(符号间插值) → 成型滤波(根升余弦 RRC)
   → 信道(AWGN / 多径瑞利 / 载波频偏 / 相位噪声)
   → 接收机: 短前导粗检 → 匹配滤波 → 长前导细同步(相位×符号网格+首径)
   → Moose CFO → LS信道估计 → MMSE均衡 → Costas相位跟踪 → LLR → Viterbi
   → 输出: BER-SNR 曲线 / 星座图 / 眼图 / EVM
 
 OFDM 分支: 比特 → 调制 → 子载波映射+导频 → IFFT → 加CP → 信道
-  → 去CP → Schmidl-Cox 定时 → CFO 估计补偿 → FFT
-  → LS/DFT/MMSE 信道估计 → 均衡 → 解调 → BER
+  → 前导定时(匹配滤波精定时+首径回溯, S&C 前导结构) → CFO 估计补偿
+  → 去CP → FFT → LS 信道估计 + DFT 截断降噪 → 均衡 → 解调 → BER
 
 AMC 支线: 链路批量生成带标注 I/Q 样本(调制类型 × SNR)
   → CNN/ResNet1D 训练 → 准确率-SNR 曲线 + 混淆矩阵
