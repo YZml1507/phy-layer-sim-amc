@@ -59,6 +59,18 @@ QPSK↔8PSK 都是恒包络，16QAM↔64QAM 都是方形 QAM）。
 ——和人类专家用手工特征（瞬时幅度方差、相位差分直方图）得到的结论
 一致。
 
+### Kaggle GPU 全量训练
+
+同一模型在 Kaggle T4 上放开数据量（每类 4000 训练 / 1000 测试，25 epoch，
+torch 2.10+cu128，约 3 分钟）：混合 SNR 准确率 **76.9%**，高 SNR 端 ~88%。
+
+![GPU 全量训练评估](../assets/amc_eval_gpu.png)
+
+-4dB 处 ~55% → 22dB 处 ~88%，曲线形态符合"低 SNR 靠恒包络/幅度粗分类、
+高 SNR 才能分辨方形 QAM 内部规模"的物理直觉；混淆结构随数据量放大依旧
+稳定（PSK 族内、QAM 族内），说明瓶颈在物理可分性而非样本量。
+复现路径：`notebooks/amc_kaggle.ipynb`（Kaggle → New Notebook → GPU T4）。
+
 ## 面试可能怎么问
 
 **Q：为什么用原始 IQ 而不是星座图/谱图？**
