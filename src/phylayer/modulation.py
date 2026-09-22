@@ -142,8 +142,10 @@ class Modem:
         gray = _gray_encode(idx)
         shifts = np.arange(width - 1, -1, -1)
         bit_of_level = (gray[None, :] >> shifts[:, None]) & 1  # (width, m_pam)
-        # axis noise variance = noise_var/2; LLR(+=>0) = lse(-d2_0/s2)-lse(-d2_1/s2)
-        axis_var = noise_var / 2.0
+        # d2 is measured in descaled (PAM-level) coordinates, where the
+        # per-axis noise variance is noise_var/(2*scale^2); the LLR exponent
+        # denominator is twice that: noise_var/scale^2.
+        axis_var = noise_var / (self._scale ** 2)
         llr_cols = []
         for b in range(width):
             d2_0 = d2[:, bit_of_level[b] == 0]

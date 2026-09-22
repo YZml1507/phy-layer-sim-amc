@@ -13,7 +13,7 @@
 
 AMC 的学术分野两代：第一代是**特征工程派**——用瞬时幅度方差、相位差分
 直方图、高阶累积量（cumulants）等手工统计量+浅分类器；第二代是**深度学习
-派**——直接把原始 IQ 序列喂给 CNN/LSTM 让它自己学特征（O'Shea 2018 的
+派**——直接把原始 IQ 序列喂给 CNN/LSTM 让它自己学特征（O'Shea 2016 的
 VT-CNN 开启了这条路）。本项目走第二代：把前面 M1–M3 造的链路反过来当
 **数据工厂**，给 1D-ResNet 供训练样本。
 
@@ -29,11 +29,11 @@ VT-CNN 开启了这条路）。本项目走第二代：把前面 M1–M3 造的�
 **为什么给原始 IQ 而不给星座图**：星座图需要先完成定时+CFO 同步——
 等于把接收机最难的活先干完，AMC 就失去了意义；而且干净星座图会让网络
 学到"像素模板匹配"这种捷径。受损 IQ 波形逼网络学**调制方式的物理本质**：
-PSK 族恒定包络、QAM 的幅度-相位联合分布、不同阶数占据带宽相同但统计
-形状不同。
+PSK 族星座恒模（星座点等模）、QAM 的幅度-相位联合分布、不同阶数占据
+带宽相同但统计形状不同。
 
 5 个类别：`bpsk / qpsk / 8psk / 16qam / 64qam`（故意包含两对"近亲"：
-QPSK↔8PSK 都恒包络，16QAM↔64QAM 都是方形 QAM——**最难的子问题就在
+QPSK↔8PSK 都是恒模星座（星座点等模），16QAM↔64QAM 都是方形 QAM——**最难的子问题就在
 族内细分**，这决定了混淆矩阵该长什么样）。
 
 ## 模型：1D-ResNet
@@ -51,7 +51,7 @@ QPSK↔8PSK 都恒包络，16QAM↔64QAM 都是方形 QAM——**最难的子问
   baseline）；
 - **1D 卷积在时域扫**：卷积核学到的等价于各种瞬时特征/高阶统计量的
   可微分版本——这正是 CNN 相对手工特征的优势：不用人工设计统计量；
-- 总参数 ~30 万，CPU 12 epoch 约 1 分钟，Kaggle T4 上几十秒。
+- 总参数 ~33 万，CPU 18 epoch 约 1 分半，Kaggle T4 上几十秒。
 
 ## 实验结果
 
@@ -59,9 +59,9 @@ QPSK↔8PSK 都恒包络，16QAM↔64QAM 都是方形 QAM——**最难的子问
 
 ![混淆矩阵 + 准确率曲线](../assets/amc_results.png)
 
-- 混合 SNR 总准确率 ~69%，高 SNR 区段 ~78%；
+- 混合 SNR 总准确率 ~76%，高 SNR 区段 ~85%（exp05 实测，CPU 小样本 18 epoch）；
 - 混淆矩阵完美呈现**教科书预测的结构**：BPSK 几乎不错；QPSK↔8PSK 互相
-  混淆（恒包络，区别只在相位集合大小）；16QAM↔64QAM 互相混淆（方形
+  混淆（恒模星座，区别只在相位集合大小）；16QAM↔64QAM 互相混淆（方形
   QAM 内部按星座规模区分是最难子问题）。
 
 这个结果本身就是面试弹药：**CNN 自己"发现"了调制分类学里的经典混淆对**
@@ -75,7 +75,7 @@ torch 2.10+cu128，约 3 分钟）：混合 SNR 准确率 **76.9%**，高 SNR �
 
 ![GPU 全量训练评估](../assets/amc_eval_gpu.png)
 
--4dB 处 ~55% → 22dB 处 ~88%，曲线形态符合"低 SNR 靠恒包络/幅度粗分类、
+-4dB 处 ~55% → 22dB 处 ~88%，曲线形态符合"低 SNR 靠恒模/幅度粗分类、
 高 SNR 才能分辨方形 QAM 内部规模"的物理直觉；混淆结构随数据量放大依旧
 稳定（PSK 族内、QAM 族内），说明**瓶颈在物理可分性而非样本量**。
 复现路径：`notebooks/amc_kaggle.ipynb`（Kaggle → New Notebook → GPU T4）。
@@ -83,10 +83,10 @@ torch 2.10+cu128，约 3 分钟）：混合 SNR 准确率 **76.9%**，高 SNR �
 ## 代码走读（按调用顺序）
 
 ```python
-ds = IqDataset(classes, n_per_class, snr_range)   # 数据工厂按需生成
-model = AmcResNet(n_classes=5)                    # 1D-ResNet
-train(model, ds)                                  # Adam + CE
-acc, cm = evaluate(model, test_set)               # 混淆矩阵
+Xtr, ytr, _ = generate_dataset(CLASSES, 800, 1024, (-4, 24))  # 数据工厂按需生成
+model = AMCNet(n_classes=5)                       # 1D-ResNet
+train_model(model, Xtr, ytr, epochs=18)           # AdamW + CE
+pred = predict(model, Xte)                        # 混淆矩阵用 confusion_matrix
 ```
 
 ## 面试可能怎么问
