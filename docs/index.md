@@ -7,6 +7,8 @@
 
 - **模块讲解**：按链路顺序逐页讲解，每页结构相同——
   「它解决什么问题 → 原理（含推导）→ 代码走读 → 面试可能怎么问」。
+- **[交互演示](demo.html)**：浏览器里实时跑链路仿真，拖滑块看星座图、
+  眼图、BER 曲线、多径 ISI 和 MMSE 均衡效果。
 - **面试手册**：预判追问与应答、简历条目、5 分钟 PPT 大纲。
 - 代码仓库：[github.com/YZml1507/phy-layer-sim-amc](https://github.com/YZml1507/phy-layer-sim-amc)
 
