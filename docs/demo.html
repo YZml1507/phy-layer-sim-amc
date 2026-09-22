@@ -105,7 +105,7 @@ canvas{width:100%;display:block;background:#0b0e13;border:1px solid var(--line2)
 <main class="grid">
 <div class="card"><h3>星座图<span class="tag">接收端采样点</span></h3><p>灰点=理想星座，亮点=判决前采样，绿点=均衡后。拖 SNR 看点云散开；拖 CFO 看星座整体旋转成环；开多径看 ISI 拖尾，勾均衡看绿点收拢。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="metrics"><span class="m">SER<b id="ser">—</b></span><span class="m">BER<b id="ber">—</b></span><span class="m">EVM<b id="evm">—</b></span></div></div>
 <div class="card"><h3>眼图<span class="tag">匹配滤波输出实部</span></h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量：拖 β 看眼皮厚薄，加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
-<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时画空心下界标记（BER≲1/(N·k)，~63% 置信）。</p><canvas id="cvBer" width="680" height="400"></canvas></div>
+<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时画空心下界标记（BER≲1/(N·k)，~63% 置信）。低 SNR 或高阶 QAM 下理论式本身是近邻近似（并集界），实测点略高于线为近似式固有误差，不是仿真错误。</p><canvas id="cvBer" width="680" height="400"></canvas></div>
 <div class="card"><h3>多径冲激响应<span class="tag">|h[n]|</span></h3><p>当前信道抽头（单位功率归一）。多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
 </main>
 </div>
