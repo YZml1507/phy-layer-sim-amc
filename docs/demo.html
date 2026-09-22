@@ -464,7 +464,8 @@ function refresh(){
 function labels(){
   $("vMod").textContent=$("mod").selectedOptions[0].text;
   $("vSnr").textContent=$("snr").value+" dB";
-  $("vCfo").textContent=($("cfo").value/1e6*8).toExponential(1)+" 周/样点";
+  const cf=+$('cfo').value/1e6*8;
+  $("vCfo").textContent=cf?cf.toExponential(1)+" 周/样点":"0";
   $("vBeta").textContent=$("beta").value;
   $("vMp").textContent=$("mp").selectedOptions[0].text.split("（")[0];
   $("vDt").textContent=$("dt").value+" 样点";
@@ -477,7 +478,7 @@ $("rerun").addEventListener("click",refresh);
 try{const hp=new URLSearchParams(location.hash.slice(1));
   if(hp.get("mod"))$("mod").value=hp.get("mod");
   if(hp.get("snr"))$("snr").value=hp.get("snr");
-  if(hp.get("cfo"))$("cfo").value=hp.get("cfo");
+  if(hp.get("cfo"))$("cfo").value=Math.round(+hp.get("cfo")*1e6/8); // hash 用物理单位 cyc/sample，滑块存 0-1000
   if(hp.get("beta"))$("beta").value=hp.get("beta");
   if(hp.get("mp"))$("mp").value=hp.get("mp");
   if(hp.get("dt"))$("dt").value=hp.get("dt");
