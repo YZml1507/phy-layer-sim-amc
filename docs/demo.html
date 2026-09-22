@@ -105,7 +105,7 @@ canvas{width:100%;display:block;background:#0b0e13;border:1px solid var(--line2)
 <main class="grid">
 <div class="card"><h3>星座图<span class="tag">接收端采样点</span></h3><p>灰点=理想星座，亮点=判决前采样，绿点=均衡后。拖 SNR 看点云散开；拖 CFO 看星座整体旋转成环；开多径看 ISI 拖尾，勾均衡看绿点收拢。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="metrics"><span class="m">SER<b id="ser">—</b></span><span class="m">BER<b id="ber">—</b></span><span class="m">EVM<b id="evm">—</b></span></div></div>
 <div class="card"><h3>眼图<span class="tag">匹配滤波输出实部</span></h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量：拖 β 看眼皮厚薄，加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
-<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时按置信上界画空心标记。</p><canvas id="cvBer" width="640" height="360"></canvas></div>
+<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时按置信上界画空心标记。</p><canvas id="cvBer" width="680" height="400"></canvas></div>
 <div class="card"><h3>多径冲激响应<span class="tag">|h[n]|</span></h3><p>当前信道抽头（单位功率归一）。多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
 </main>
 </div>
@@ -369,7 +369,7 @@ function erfc(x){ // 近似
 function drawBer(res,p){
   draw(document.getElementById("cvBer"),(g,W,H)=>{
     // x 轴 = Es/N0，范围与滑块全域一致 → 实测点水平方向永不出界
-    const pad=46,x0=-4,x1=30,ymin=1e-6,ymax=1;
+    const pad=52,x0=-4,x1=30,ymin=1e-8,ymax=1;
     const xs=v=>pad+(W-2*pad)*(v-x0)/(x1-x0);
     const lys=v=>Math.log10(Math.min(Math.max(v,ymin),ymax));
     const ys=v=>H-pad-(H-2*pad)*(lys(v)-lys(ymin))/(lys(ymax)-lys(ymin));
@@ -379,13 +379,13 @@ function drawBer(res,p){
     // 网格与刻度
     g.strokeStyle="#21262d";g.lineWidth=1;g.beginPath();
     for(let e=0;e<=x1;e+=5){g.moveTo(xs(e),pad);g.lineTo(xs(e),H-pad);}
-    for(const e of[0,-1,-2,-3,-4,-5,-6]){const y=ys(Math.pow(10,e));g.moveTo(pad,y);g.lineTo(W-pad,y);}
+    for(const e of[0,-1,-2,-3,-4,-5,-6,-7,-8]){const y=ys(Math.pow(10,e));g.moveTo(pad,y);g.lineTo(W-pad,y);}
     g.stroke();
     g.strokeStyle="#30363d";g.strokeRect(pad,pad,W-2*pad,H-2*pad);
     g.fillStyle="#8b949e";g.font="10px 'JetBrains Mono',monospace";
-    for(let e=0;e<=x1;e+=5)g.fillText(e==0?"0":e+"",xs(e)-7,H-pad+14);
-    g.fillText("Es/N0 (dB)",W/2-24,H-6);
-    for(const e of[0,-1,-2,-3,-4,-5,-6])g.fillText("1e"+e,6,ys(Math.pow(10,e))+3);
+    for(let e=0;e<=x1;e+=5)g.fillText(e==0?"0":e+"",xs(e)-7,H-pad+15);
+    g.fillText("Es/N0 (dB)",W/2-24,H-8);
+    for(const e of[0,-1,-2,-3,-4,-5,-6,-7,-8])g.fillText("1e"+e,8,ys(Math.pow(10,e))+3);
     g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
     // 理论曲线：轴是 Es/N0，公式吃 Eb/N0 → ebn0=e-10log10(k)；低于 ymin 段不画（瀑布线自然出界）
     g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();
@@ -416,7 +416,8 @@ function drawBer(res,p){
       const label="实测 "+res.ber.toExponential(1)+dTxt;
       const tw=g.measureText(label).width;
       const tx=mx+9+tw>W-pad?mx-9-tw:mx+9;
-      const ly=my-11<pad+26&&tx+tw>W-pad-130?my+14:my+3; // 避开图例带
+      const lgX=W-pad-168-8,lgY=pad+8,lgB=lgY+52; // 图例矩形（与下方绘制处一致）
+      const ly=(tx+tw>lgX&&tx<lgX+168&&my-11<lgB+4)?lgB+13:my+3; // 与图例相交则挪到其下
       g.fillText(label,tx,ly);
     }else{
       // 0 错误：log 轴画不了 0，标空心下界点 BER<1/(N·k)
@@ -431,12 +432,14 @@ function drawBer(res,p){
       g.fillText(label,tx,my-6);
     }
     g.restore();
-    // 图例（右上角：瀑布线单调降，右上恒为空）
-    const lx=W-pad-118,ly2=pad+12;
-    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();g.moveTo(lx,ly2);g.lineTo(lx+22,ly2);g.stroke();
-    g.fillStyle="#8b949e";g.font="10px 'Inter',sans-serif";g.fillText("理论",lx+26,ly2+3);
-    g.fillStyle="#f85149";g.beginPath();g.arc(lx+62,ly2,4,0,7);g.fill();
-    g.fillStyle="#8b949e";g.fillText("实测(4096符号)",lx+70,ly2+3);
+    // 图例（右上角半透明底板：瀑布线单调降，右上恒为空）
+    const lw=168,lh=52,lx=W-pad-lw-8,ly2=pad+8;
+    g.fillStyle="rgba(13,17,23,.82)";g.strokeStyle="rgba(88,166,255,.28)";g.lineWidth=1;
+    g.beginPath();g.roundRect(lx,ly2,lw,lh,7);g.fill();g.stroke();
+    g.strokeStyle="#58a6ff";g.lineWidth=2;g.beginPath();g.moveTo(lx+10,ly2+15);g.lineTo(lx+34,ly2+15);g.stroke();
+    g.fillStyle="#c9d1d9";g.font="11.5px 'Inter','Noto Sans SC',sans-serif";g.fillText("理论 BER(AWGN)",lx+40,ly2+19);
+    g.fillStyle="#f85149";g.beginPath();g.arc(lx+17,ly2+36,4.5,0,7);g.fill();
+    g.fillStyle="#c9d1d9";g.fillText("实测(4096符号)",lx+40,ly2+40);
   });
 }
 // ---------- 主循环 ----------
