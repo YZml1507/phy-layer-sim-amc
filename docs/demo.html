@@ -4,42 +4,77 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>物理层交互演示 · PHY-Layer-Sim-AMC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0d1117;--panel:#161b22;--line:#30363d;--fg:#e6edf3;--mut:#8b949e;--acc:#58a6ff;--ok:#3fb950;--warn:#d29922;--bad:#f85149}
+:root{
+  --bg:#0d1117;--bg2:#010409;--panel:#161b22;--panel2:#1c2330;
+  --line:#2b3440;--line2:rgba(255,255,255,.07);
+  --fg:#e6edf3;--mut:#8b949e;--faint:#59616f;
+  --acc:#58a6ff;--acc-hi:#79b8ff;--acc-soft:rgba(88,166,255,.13);
+  --ok:#3fb950;--warn:#d29922;--bad:#f85149;
+  --maxw:1520px;
+  --disp:"Space Grotesk","Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --body:"Inter","Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei","WenQuanYi Zen Hei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:"Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei","WenQuanYi Zen Hei",system-ui,sans-serif}
-header{padding:22px 28px 10px;border-bottom:1px solid var(--line)}
-h1{font-size:22px;margin:0 0 6px}
-.sub{color:var(--mut);font-size:13px}
-.sub a{color:var(--acc);text-decoration:none}
-.wrap{display:grid;grid-template-columns:250px 1fr;gap:14px;padding:14px 28px 28px}
-@media(max-width:900px){.wrap{grid-template-columns:1fr}}
-.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px}
-.ctrl h2{font-size:14px;margin:0 0 10px;color:var(--acc)}
-.field{margin-bottom:14px}
-.field label{display:flex;justify-content:space-between;font-size:12px;color:var(--mut);margin-bottom:4px}
-.field label b{color:var(--fg);font-weight:600}
-input[type=range]{width:100%;accent-color:var(--acc)}
+html{scrollbar-color:var(--line) var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.65;-webkit-font-smoothing:antialiased}
+header{max-width:var(--maxw);margin:0 auto;padding:34px 28px 18px;border-bottom:1px solid var(--line)}
+h1{font-family:var(--disp);font-size:27px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--mut);font-size:13.5px;max-width:78ch}
+.sub a{color:var(--acc-hi);text-decoration:none}
+.sub a:hover{text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-family:var(--mono);font-size:11.5px;color:var(--acc-hi);background:var(--acc-soft);border:1px solid rgba(88,166,255,.25);padding:3px 10px;border-radius:999px}
+.chip.dim{color:var(--mut);background:var(--panel2);border-color:var(--line)}
+.wrap{display:grid;grid-template-columns:272px 1fr;gap:16px;max-width:var(--maxw);margin:0 auto;padding:18px 28px 30px}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:sticky;top:18px;align-self:start}
+.ctrl h2{font-family:var(--disp);font-size:15px;font-weight:600;margin:0 0 14px;color:var(--fg);letter-spacing:.01em}
+.ctrl h2::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--acc);margin-right:8px;vertical-align:1px}
+.field{margin-bottom:15px}
+.field label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--mut);margin-bottom:6px}
+.field label b{color:var(--acc-hi);font-weight:500;font-family:var(--mono);font-size:11.5px;background:var(--acc-soft);padding:1px 8px;border-radius:6px;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer}
 select,input[type=checkbox]{accent-color:var(--acc)}
-select{width:100%;background:#0d1117;color:var(--fg);border:1px solid var(--line);border-radius:6px;padding:6px;font-size:13px}
-.chk{display:flex;gap:8px;align-items:center;font-size:13px;color:var(--mut)}
-button{width:100%;margin-top:4px;background:var(--acc);color:#06223f;border:0;border-radius:6px;padding:8px;font-weight:600;cursor:pointer}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
-.card h3{margin:0 0 4px;font-size:13px;color:var(--fg)}
-.card p{margin:0 0 8px;font-size:11.5px;color:var(--mut);line-height:1.5}
-canvas{width:100%;display:block;background:#0b0e13;border-radius:6px}
-.stat{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;margin-top:8px;color:var(--mut)}
-.stat b{color:var(--fg)}
-.note{margin-top:14px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;font-size:12.5px;color:var(--mut);line-height:1.7}
-.note b{color:var(--fg)}
-img.shot{width:100%;border-radius:6px;border:1px solid var(--line)}
+select{width:100%;background:var(--bg2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:var(--body)}
+.chk{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);padding:6px 0}
+button{width:100%;margin-top:8px;background:var(--acc);color:#06223f;border:0;border-radius:8px;padding:9px;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--body);transition:background .15s}
+button:hover{background:var(--acc-hi)}
+.hint{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--faint);line-height:1.6}
+.hint code{font-family:var(--mono);color:var(--mut);font-size:10.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px}
+.card h3{margin:0 0 5px;font-size:14px;font-weight:600;color:var(--fg);letter-spacing:.01em}
+.card h3 .tag{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+.card p{margin:0 0 10px;font-size:12px;color:var(--mut);line-height:1.6}
+.card p b{color:var(--fg);font-weight:500}
+canvas{width:100%;display:block;background:#0b0e13;border:1px solid var(--line2);border-radius:8px}
+.metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.m{font-size:11.5px;color:var(--mut);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:3px 10px}
+.m b{color:var(--fg);font-family:var(--mono);font-weight:500;margin-left:4px}
+.explain{max-width:var(--maxw);margin:0 auto;padding:0 28px 34px}
+.explain .inner{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.explain h3{font-family:var(--disp);font-size:16px;font-weight:600;margin:0 0 14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px;font-size:12.5px;color:var(--mut);line-height:1.7}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.cols b{color:var(--fg);font-weight:600}
+.cols i{font-style:normal;color:var(--acc-hi);font-family:var(--mono);font-size:11px}
+.fig{margin-top:18px}
+.fig .figbox{background:#f6f8fa;border-radius:12px;padding:14px;border:1px solid var(--line)}
+.fig img{width:100%;display:block;border-radius:6px}
+.fig .cap{font-size:11.5px;color:var(--faint);margin-top:8px;font-family:var(--mono)}
+.foot{max-width:var(--maxw);margin:0 auto;padding:0 28px 26px;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
 </style>
 </head>
 <body>
 <header>
 <h1>物理层链路交互演示</h1>
-<div class="sub">浏览器里实时跑：调制 → RRC 成型 → 多径/CFO/噪声 → 匹配滤波 → 均衡 → 判决。拖动左边滑块看星座、眼图、误码率怎么变。<a href="./index.html">← 回到讲解文档</a> · <a href="https://github.com/YZml1507/phy-layer-sim-amc">代码仓库</a></div>
+<div class="sub">浏览器里实时跑完整链路：调制 → RRC 成型 → 多径 / CFO / AWGN → 匹配滤波 → MMSE 均衡 → 判决。拖动左侧滑块，观察星座、眼图、误码率如何响应每一种信道损伤。<a href="./index.html">← 回到讲解文档</a> · <a href="https://github.com/YZml1507/phy-layer-sim-amc">代码仓库</a></div>
+<div class="chips"><span class="chip">纯 JS · 零依赖</span><span class="chip">实时 4096 符号</span><span class="chip dim">URL hash 可复现，如 #mod=64qam&amp;snr=-4&amp;mp=severe&amp;eq=1</span></div>
 </header>
 <div class="wrap">
 <aside class="ctrl">
@@ -65,22 +100,27 @@ img.shot{width:100%;border-radius:6px;border:1px solid var(--line)}
 <input type="range" id="dt" min="-1" max="1" step="1" value="0"></div>
 <div class="field chk"><input type="checkbox" id="eq"><label for="eq">开 MMSE 均衡（多径时有效）</label></div>
 <button id="rerun">换一批数据</button>
+<div class="hint">每个滑块对应一种真实损伤。改任意参数即重跑一批 4096 符号；<code>#参数</code> 可分享当前状态。</div>
 </aside>
 <main class="grid">
-<div class="card"><h3>星座图（接收端采样点）</h3><p>灰点=理想星座，亮点=均衡前，绿点=均衡后/判决点。拖 SNR 看点云散开；拖 CFO 看星座整体旋转；开多径看 ISI 拖尾。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="stat"><span>误符号率 SER: <b id="ser">—</b></span><span>误码率 BER: <b id="ber">—</b></span><span>EVM: <b id="evm">—</b></span></div></div>
-<div class="card"><h3>眼图（匹配滤波输出实部）</h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量。拖 β 看眼皮厚薄；加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
-<div class="card"><h3>BER vs SNR（理论瀑布线 + 当前实测点）</h3><p>x 轴=Es/N0（同滑块），线=该调制 AWGN 理论公式，红点=4096 符号实测；红点在纯 AWGN 下应压在线上，加损伤后偏离多少就是多少代价（Δ 标注）。0 错误时按置信上界标出。</p><canvas id="cvBer" width="640" height="360"></canvas></div>
-<div class="card"><h3>多径冲激响应 |h[n]|</h3><p>当前信道抽头；多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
+<div class="card"><h3>星座图<span class="tag">接收端采样点</span></h3><p>灰点=理想星座，亮点=判决前采样，绿点=均衡后。拖 SNR 看点云散开；拖 CFO 看星座整体旋转成环；开多径看 ISI 拖尾，勾均衡看绿点收拢。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="metrics"><span class="m">SER<b id="ser">—</b></span><span class="m">BER<b id="ber">—</b></span><span class="m">EVM<b id="evm">—</b></span></div></div>
+<div class="card"><h3>眼图<span class="tag">匹配滤波输出实部</span></h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量：拖 β 看眼皮厚薄，加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
+<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时按置信上界画空心标记。</p><canvas id="cvBer" width="640" height="360"></canvas></div>
+<div class="card"><h3>多径冲激响应<span class="tag">|h[n]|</span></h3><p>当前信道抽头（单位功率归一）。多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
 </main>
 </div>
-<div class="wrap" style="padding-top:0"><div></div>
-<div class="note">
-<b>在演示什么：</b>左边每个滑块对应一种真实信道损伤——SNR=AWGN 热噪声；CFO=收发晶振差导致的星座旋转；β=成型滤波器的"带宽-定时鲁棒性"权衡；多径=抽头延迟线信道引入的 ISI；定时偏差=采样没采在奈奎斯特点上。<br>
-<b>看什么：</b>开"重多径"再勾均衡，对比均衡前后星座——这就是模块 07 MMSE 均衡干的事；把 SNR 拉低到 0dB 以下看星座彻底糊掉、BER 飙到 ~50%。<br>
-<b>AMC 调制识别结果（Kaggle T4 训练）：</b>同一套链路旁路生成训练数据，1D-ResNet 学到的混淆结构跟教科书一致——PSK 族内、QAM 族内互相混淆。
-<img class="shot" src="assets/amc_eval_gpu.png" alt="AMC 混淆矩阵与准确率曲线">
+<section class="explain"><div class="inner">
+<h3>这张图在教什么</h3>
+<div class="cols">
+<div><b>损伤→观测量：</b>SNR=AWGN 热噪声（点云散开）；CFO=收发晶振差（星座整体旋转）；β=成型滤波器"带宽–定时鲁棒性"权衡；多径=抽头延迟线引入 ISI；定时偏差=没采在奈奎斯特点。</div>
+<div><b>实测点为什么不一定在线上：</b>蓝线是纯 AWGN 理论值——损伤为 0 时实测点才贴线（±统计抖动）；多径/CFO/定时偏差造成的性能代价，体现为红点离曲线的距离（Δ 标注）。这正是"仿真验证理论"的标准做法。</div>
+<div><b>建议的玩法：</b><i>重多径</i> → 星座拖散、BER 飘高 → 勾 <i>MMSE 均衡</i> → 绿点收拢、Δ 回落——就是模块 07 干的事。SNR 拉到 -4dB 看星座糊掉、BER≈0.5。</div>
+<div><b>AMC 调制识别（Kaggle T4）：</b>同一套链路旁路生成训练数据，1D-ResNet 学到的混淆结构与教科书一致——PSK 族内、QAM 族内互相混淆。</div>
 </div>
-</div>
+<div class="fig"><div class="figbox"><img src="assets/amc_eval_gpu.png" alt="AMC 混淆矩阵与准确率-SNR 曲线（Kaggle T4 训练）"></div>
+<div class="cap">fig: amc_eval_gpu.png — 1D-ResNet 在混合 SNR 下 acc=0.77；混淆集中在 PSK 族内与 QAM 族内。</div></div>
+</div></section>
+<div class="foot">docs/demo.html · 纯前端仿真，每次刷新重采一批数据 · URL hash 参数可复现链路状态</div>
 <script>
 "use strict";
 // ---------- 复数与随机 ----------
@@ -306,7 +346,7 @@ function drawChan(res){
     for(let j=0;j<n;j++){const v=Math.sqrt(cabs2(res.taps[j]))/mx;
       const x=pad+j*bw+bw*0.2;
       g.fillStyle="#58a6ff";g.fillRect(x,H-pad-v*(H-2*pad),bw*0.6,v*(H-2*pad));
-      g.fillStyle="#8b949e";g.font="11px monospace";g.fillText("h"+j,x+2,H-pad+14);}
+      g.fillStyle="#8b949e";g.font="11px 'JetBrains Mono',monospace";g.fillText("h"+j,x+2,H-pad+14);}
   });
 }
 function theoryBer(sch,ebn0db){
@@ -342,7 +382,7 @@ function drawBer(res,p){
     for(const e of[0,-1,-2,-3,-4,-5,-6]){const y=ys(Math.pow(10,e));g.moveTo(pad,y);g.lineTo(W-pad,y);}
     g.stroke();
     g.strokeStyle="#30363d";g.strokeRect(pad,pad,W-2*pad,H-2*pad);
-    g.fillStyle="#8b949e";g.font="10px monospace";
+    g.fillStyle="#8b949e";g.font="10px 'JetBrains Mono',monospace";
     for(let e=0;e<=x1;e+=5)g.fillText(e==0?"0":e+"",xs(e)-7,H-pad+14);
     g.fillText("Es/N0 (dB)",W/2-24,H-6);
     for(const e of[0,-1,-2,-3,-4,-5,-6])g.fillText("1e"+e,6,ys(Math.pow(10,e))+3);
@@ -372,27 +412,31 @@ function drawBer(res,p){
       g.strokeStyle="rgba(248,81,73,.5)";g.setLineDash([3,3]);g.beginPath();
       g.moveTo(mx,my);g.lineTo(mx,clampY(ys(Math.min(thAtX,ymax))));g.stroke();g.setLineDash([]);
       g.fillStyle="#f85149";g.beginPath();g.arc(mx,my,5.5,0,7);g.fill();
-      g.fillStyle="#e6edf3";g.font="11px monospace";
+      g.fillStyle="#e6edf3";g.font="11px 'JetBrains Mono',monospace";
       const label="实测 "+res.ber.toExponential(1)+dTxt;
-      const tx=mx+9+label.length*6.6>W-pad?mx-9-label.length*6.6:mx+9;
-      g.fillText(label,tx,my+3);
+      const tw=g.measureText(label).width;
+      const tx=mx+9+tw>W-pad?mx-9-tw:mx+9;
+      const ly=my-11<pad+26&&tx+tw>W-pad-130?my+14:my+3; // 避开图例带
+      g.fillText(label,tx,ly);
     }else{
       // 0 错误：log 轴画不了 0，标空心下界点 BER<1/(N·k)
       const my=H-pad-4;
       g.strokeStyle="#f85149";g.lineWidth=1.5;g.beginPath();g.arc(mx,my,5.5,0,7);g.stroke();
       g.beginPath();g.moveTo(mx,my+5.5);g.lineTo(mx,my+11);g.lineTo(mx-3.5,my+7.5);g.moveTo(mx,my+11);g.lineTo(mx+3.5,my+7.5);g.stroke();
-      g.fillStyle="#e6edf3";g.font="11px monospace";
+      g.fillStyle="#e6edf3";g.font="11px 'JetBrains Mono',monospace";
       const bound=(1/(res.nE*res.sch.k)).toExponential(1);
       const label="实测 0 错 → BER<"+bound;
-      const tx=mx+9+label.length*6.6>W-pad?mx-9-label.length*6.6:mx+9;
+      const tw=g.measureText(label).width;
+      const tx=mx+9+tw>W-pad?mx-9-tw:mx+9;
       g.fillText(label,tx,my-6);
     }
     g.restore();
-    // 图例
-    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();g.moveTo(pad+8,pad+12);g.lineTo(pad+30,pad+12);g.stroke();
-    g.fillStyle="#8b949e";g.font="10px sans-serif";g.fillText("理论",pad+34,pad+15);
-    g.fillStyle="#f85149";g.beginPath();g.arc(pad+72,pad+12,4,0,7);g.fill();
-    g.fillStyle="#8b949e";g.fillText("实测(4096符号)",pad+80,pad+15);
+    // 图例（右上角：瀑布线单调降，右上恒为空）
+    const lx=W-pad-118,ly2=pad+12;
+    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();g.moveTo(lx,ly2);g.lineTo(lx+22,ly2);g.stroke();
+    g.fillStyle="#8b949e";g.font="10px 'Inter',sans-serif";g.fillText("理论",lx+26,ly2+3);
+    g.fillStyle="#f85149";g.beginPath();g.arc(lx+62,ly2,4,0,7);g.fill();
+    g.fillStyle="#8b949e";g.fillText("实测(4096符号)",lx+70,ly2+3);
   });
 }
 // ---------- 主循环 ----------
