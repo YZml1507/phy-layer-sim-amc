@@ -30,7 +30,7 @@ src/phylayer/      物理层仿真库(纯 NumPy/SciPy + torch 仅用于 amc.py)
   ofdm.py          OFDM 收发机(S&C+匹配滤波定时、CFO、导频 CPE、信道估计)
   iqdata.py        带标注 I/Q 数据集生成(受损信道链,供 AMC)
   amc.py           1D-ResNet 调制分类(PyTorch,可选依赖)
-  metrics.py       BER / SER
+  metrics.py       BER / SER / EVM
 experiments/       可复现实验脚本,结果图输出到 docs/assets/
   exp01 星座图与 EVM       exp02 AWGN BER vs 理论
   exp03 单载波突发链路      exp04 OFDM 链路对比
@@ -38,7 +38,7 @@ experiments/       可复现实验脚本,结果图输出到 docs/assets/
 docs/              逐模块中文讲解文档(MkDocs Material)
   modules/         01-总览 ... 10-AMC
   interview/       面试追问手册 + 简历/PPT 素材
-tests/             与理论值对齐的数值验证测试(48 项)
+tests/             与理论值对齐的数值验证测试(56 项, 含理论界回归)
 notebooks/         Kaggle 一键训练 notebook(amc_kaggle.ipynb)
 ```
 

@@ -140,7 +140,9 @@ syms = ofdm_rx(rx_wave)       # 前导匹配滤波+首径回扫 -> CFO -> derota
 `exp04_ofdm_link.py`：瑞利 9 抽头多径 + CFO $3\times10^{-3}$，无编码 QPSK。
 
 - 干净信道回环：误符号率 0；多径+CFO 无噪声：0。
-- BER 曲线见 `assets/ofdm_ber.png`：低 SNR 与单载波 MMSE 相当；高 SNR
+- BER 曲线见 `assets/ofdm_ber.png`：低 SNR 下 OFDM 反而优于单载波
+  （有限长 MMSE 均衡器在低 SNR 退化为匹配滤波，残留 ISI 不除；
+  OFDM 把 ISI 化成每个载波上的平坦衰落，逐个补偿）；高 SNR
   下残留 ~1% 误码来自**深衰落载波上的迫零噪声放大**——这正是"OFDM
   必须配信道编码+载波间交织"的理由（模块 04 的卷积码+交织恰好是解药，
   WiFi 的 BCC 编码就是这么做的）。
