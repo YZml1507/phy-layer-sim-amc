@@ -1,0 +1,1405 @@
+
+<!doctype html>
+<html lang="zh" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="数字通信物理层全链路仿真 + 深度学习调制识别 —— 逐模块原理讲解">
+      
+      
+      
+      
+        <link rel="prev" href="../07-equalization/">
+      
+      
+        <link rel="next" href="../09-channel-estimation/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+    
+    
+      
+        <title>08 OFDM 收发机 - PHY-Layer-Sim-AMC 讲解文档</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="https://unpkg.com/katex@0/dist/katex.min.css">
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#08-ofdm" class="md-skip">
+          跳转至
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="页眉">
+    <a href="../.." title="PHY-Layer-Sim-AMC 讲解文档" class="md-header__button md-logo" aria-label="PHY-Layer-Sim-AMC 讲解文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PHY-Layer-Sim-AMC 讲解文档
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              08 OFDM 收发机
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="深色模式"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="深色模式" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="浅色模式"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="浅色模式" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="搜索" placeholder="搜索" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="查找">
+        
+        <button type="reset" class="md-search__icon md-icon" title="清空当前内容" aria-label="清空当前内容" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            正在初始化搜索引擎
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/YZml1507/phy-layer-sim-amc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="导航栏" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="PHY-Layer-Sim-AMC 讲解文档" class="md-nav__button md-logo" aria-label="PHY-Layer-Sim-AMC 讲解文档" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PHY-Layer-Sim-AMC 讲解文档
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/YZml1507/phy-layer-sim-amc" title="前往仓库" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    首页
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../demo.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    交互演示
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../verification/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    数字复核清单
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    模块讲解
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    模块讲解
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../01-overview/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    01 总览与架构
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../02-modulation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    02 数字调制与解调
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../03-pulse-shaping/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    03 脉冲成型与匹配滤波
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../04-coding/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    04 信道编码与 Viterbi 译码
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../05-channels/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    05 信道模型
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../06-synchronization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    06 同步（定时/载波）
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../07-equalization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    07 均衡
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    08 OFDM 收发机
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    08 OFDM 收发机
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        它解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#80211a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帧结构（对照 802.11a 设计）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CP 为什么能把卷积变成除法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schmidlcox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schmidl–Cox 定时
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CFO 估计（两半相关）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        信道估计与时域降噪
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        逐符号残余相位跟踪（CPE）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码走读（按调用顺序）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实验结果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试可能怎么问
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../09-channel-estimation/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    09 信道估计
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../10-amc/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    10 AMC 调制识别
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    面试手册
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    面试手册
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interview/qa-handbook/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    追问预判与应答
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interview/resume-ppt/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    简历与 PPT 素材
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../interview/cheat-sheet/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    临考速查卡
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="目录">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      目录
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        它解决什么问题
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#80211a" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        帧结构（对照 802.11a 设计）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        原理
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="原理">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#cp" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CP 为什么能把卷积变成除法
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#schmidlcox" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Schmidl–Cox 定时
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cfo" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CFO 估计（两半相关）
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        信道估计与时域降噪
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#cpe" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        逐符号残余相位跟踪（CPE）
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        代码走读（按调用顺序）
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        实验结果
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        面试可能怎么问
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="08-ofdm">08 OFDM 收发机<a class="headerlink" href="#08-ofdm" title="Permanent link">&para;</a></h1>
+<blockquote>
+<p>代码：<code>src/phylayer/ofdm.py</code>，实验：<code>experiments/exp04_ofdm_link.py</code>
+上游：模块 06 的同步思想、模块 07 的"信道卷积"框架
+一句话：把宽带频率选择性信道切成 64 个窄带平坦子信道，均衡退化为每个
+载波除一个复数。</p>
+</blockquote>
+<h2 id="_1">它解决什么问题<a class="headerlink" href="#_1" title="Permanent link">&para;</a></h2>
+<p>模块 07 的时域均衡在多径信道上能用，但有两个本质代价：</p>
+<ol>
+<li>时域均衡器要解 <span class="arithmatex">\(L_w\)</span> 阶线性正规方程，构造方程的 Toeplitz 矩阵规模随
+   <span class="arithmatex">\(L_h+L_w\)</span> 增长——复杂度随信道长度增长；</li>
+<li>信道频谱的深凹点上，MMSE 也只能折中——ISI 消了，该频点信噪比还是差。</li>
+</ol>
+<p>OFDM 换了一条更聪明的思路：<strong>不做时域均衡，让 ISI 在结构上消失</strong>。原理
+分两步：</p>
+<ul>
+<li><strong>拉长符号周期</strong>：把几十个 QAM 符号并排放在正交子载波上，一个
+  OFDM 符号持续 <span class="arithmatex">\(N=64\)</span> 个采样——多径那点儿拖尾相对超长符号周期变得可以
+  忽略；</li>
+<li><strong>加循环前缀 CP</strong>：把符号尾部 <span class="arithmatex">\(N_{cp}\)</span> 个采样复制到前面，让信道的
+  <strong>线性卷积</strong>在接收窗口内表现得像<strong>循环卷积</strong>。</li>
+</ul>
+<p>循环卷积在 DFT 域里是对角阵（复指数是循环卷积矩阵的特征向量），于是</p>
+<div class="arithmatex">\[
+Y=\mathrm{DFT}(h\circledast x)=H\odot X
+\]</div>
+<p>每个子载波上信道退化成一个<strong>复数标量</strong> <span class="arithmatex">\(H_k\)</span>——均衡就是逐载波除一下。
+这就是 OFDM 取代单载波均衡的核心卖点：<strong>把频率选择性信道切成一堆
+平坦衰落子信道</strong>。</p>
+<h2 id="80211a">帧结构（对照 802.11a 设计）<a class="headerlink" href="#80211a" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code>[ S&amp;C 同步前导 (CP+64) | 训练符号 (CP+64) | 数据 OFDM 符号 × N (各 CP+64) ]
+</code></pre></div>
+<ul>
+<li><strong>同步前导</strong>：只偶数载波携带 PN 序列 → 时域 64 点呈"前 32 = 后 32"
+  两半重复结构 → Schmidl–Cox 定时 + CFO 粗估；</li>
+<li><strong>训练符号</strong>：全部 62 个可用载波放已知 BPSK → 一步 LS 信道估计；</li>
+<li><strong>数据符号</strong>：58 数据载波 + 4 导频载波（<code>{6,18,42,54}</code>）→ 导频放
+  已知 PN，用于逐符号残余相位跟踪（CPE）。</li>
+</ul>
+<p>载波规划：DC(0) 与 Nyquist(32) 置零——工程惯例（DC 受本振泄漏污染，
+Nyquist 在抗混叠滤波器边缘）。</p>
+<h2 id="_2">原理<a class="headerlink" href="#_2" title="Permanent link">&para;</a></h2>
+<h3 id="cp">CP 为什么能把卷积变成除法<a class="headerlink" href="#cp" title="Permanent link">&para;</a></h3>
+<p>信道线性卷积写成矩阵是带状 Toeplitz；DFT 矩阵的特征向量是复指数，
+而<strong>循环</strong> Toeplitz 矩阵恰好被 DFT 对角化：</p>
+<div class="arithmatex">\[
+Y=\mathrm{DFT}(h\circledast x)=H\odot X
+\]</div>
+<p>CP 的作用正是"伪装"循环卷积：把符号尾部 <span class="arithmatex">\(N_{cp}\)</span> 个采样复制到头部，
+信道输出在主体窗口内的效果和循环卷积完全一致——<strong>条件是 CP 长度 ≥
+信道拖尾长度</strong>。这是 OFDM 唯一真正"烧钱"的地方：16/80 = 20% 的带宽
+开销换"均衡变成除法"。</p>
+<p><strong>临界细节——FFT 窗的位置</strong>：窗口可以比符号体<strong>早</strong>，但有上界：偏早量
+<span class="arithmatex">\(\le N_{cp}-(L-1)\)</span>——窗内完整装下信道拖尾时才是合法循环移位，被吸收进
+<span class="arithmatex">\(H\)</span> 的线性相位项；偏早更多同样会抓到上一符号的延拓尾部。窗口绝不能
+<strong>晚</strong>（窗尾会抓到下一个符号的 CP 样本，不属于本符号的循环延拓 → ISI 直接
+进窗）。这是调通接收机时实际踩到的坑：同步估计偏晚 4 个采样，整帧
+误码率 50%。</p>
+<h3 id="schmidlcox">Schmidl–Cox 定时<a class="headerlink" href="#schmidlcox" title="Permanent link">&para;</a></h3>
+<p>前导时域两半相同 → 滑动相关：</p>
+<div class="arithmatex">\[
+P(d)=\sum_{m=0}^{L-1} r^*[d+m]\,r[d+m+L],\qquad
+R(d)=\sum_{m=0}^{L-1}|r[d+m+L]|^2,\qquad
+M(d)=\frac{|P(d)|^2}{R(d)^2}
+\]</div>
+<p>噪声区 <span class="arithmatex">\(M\approx0\)</span>；进入前导后，两半样本只差一个 CFO 公共相位（调制
+部分被共轭乘积消去），<span class="arithmatex">\(|P(d)|\to R(d)\)</span>、<span class="arithmatex">\(M\to1\)</span> 形成
+<strong>平台</strong>。平台宽约 <span class="arithmatex">\(N_{cp}-(L_h-1)\)</span>（无多径时即 <span class="arithmatex">\(N_{cp}\)</span>）——粗定时够了，精确点还得下一步。</p>
+<h3 id="cfo">CFO 估计（两半相关）<a class="headerlink" href="#cfo" title="Permanent link">&para;</a></h3>
+<p>相隔 <span class="arithmatex">\(L=N/2\)</span> 的两样本在 CFO <span class="arithmatex">\(\epsilon\)</span>（归一化）下差固定相位
+<span class="arithmatex">\(e^{j2\pi\epsilon L}\)</span>：</p>
+<div class="arithmatex">\[
+\hat\epsilon=\frac{1}{2\pi L}\angle\sum r^*[d]\,r[d+L]
+\]</div>
+<p>和模块 06 的 Moose 是同一个思想：重复结构把频偏转成可测相位差。</p>
+<p><strong>CFO 不补会怎样——ICI 定量</strong>：以子载波间隔归一化的频偏
+<span class="arithmatex">\(\epsilon=\Delta f\cdot T_u\)</span>（exp04 注入的 <span class="arithmatex">\(\Delta f=3\times10^{-3}\)</span> 周/样点
+对应 <span class="arithmatex">\(\epsilon=0.192\)</span>），载波 <span class="arithmatex">\(l\)</span> 的接收符号变为</p>
+<div class="arithmatex">\[
+Y_l = s_0 X_l + \sum_{k\neq l}s_{k-l}X_k,\qquad
+|s_m|=\frac{\sin\pi(m+\epsilon)}{N\left|\sin\frac{\pi(m+\epsilon)}{N}\right|}
+\]</div>
+<p>（严格式里 <span class="arithmatex">\(s_m\)</span> 还带一个公共相位因子 <span class="arithmatex">\(e^{j\pi(m+\epsilon)(N-1)/N}\)</span>，
+只影响相位、不影响功率分配，这里省去。）</p>
+<p>有用信号被压成 <span class="arithmatex">\(|s_0|^2\approx 1-(\pi\epsilon)^2/3\)</span>，泄漏出的能量即
+<strong>载波间干扰 ICI</strong>：由 Parseval，<span class="arithmatex">\(\sum_m|s_m|^2=1\)</span>，所以</p>
+<div class="arithmatex">\[
+P_{\mathrm{ICI}}=1-|s_0|^2\approx\frac{(\pi\epsilon)^2}{3}
+\]</div>
+<p>代入 <span class="arithmatex">\(\epsilon=0.192\)</span>：ICI ≈ <strong>−9.4 dB（11%）</strong>——ICI 不可压，
+相当于把每个载波的有效 SNR <strong>钉死在 ~9.4 dB 上限</strong>：QPSK 也压出
+~3×10⁻³ 的误符号地板，16QAM ~26%、64QAM ~70% 基本报废。
+而 Moose 估计+补偿后的残余频偏 ~3.5×10⁻⁵ 周/样点（ε≈2×10⁻³）
+对应 ICI ≈ −48 dB，完全淹没在噪声里——<strong>这就是 OFDM 必须
+先补 CFO 的定量理由</strong>：不补是系统性灾难，补完代价可忽略。
+另外频偏的整数部分 <span class="arithmatex">\(\epsilon\ge1\)</span> 不是
+ICI 而是<strong>载波整体错位</strong>（导频/数据全挪一格），802.11a 靠长短前导
+两级估计分别覆盖。</p>
+<h3 id="_3">信道估计与时域降噪<a class="headerlink" href="#_3" title="Permanent link">&para;</a></h3>
+<p>训练符号全载波已知 → 逐载波 LS：</p>
+<div class="arithmatex">\[
+\hat H_k = Y_k^{(tr)}/X_k^{(tr)}
+\]</div>
+<p>再做一步工程上必做的<strong>时域降噪</strong>：<span class="arithmatex">\(\hat H\to\)</span>IFFT 得信道冲激响应估计
+<span class="arithmatex">\(\hat h\)</span>，把 CP 长度以外的抽头清零（真实信道拖尾不可能超 CP），再 FFT
+回来。白噪声原本均摊在全部 64 个抽头，截断后只剩约 <span class="arithmatex">\(N_{cp}/N\)</span> 的噪声
+能量——估计方差约降 6 dB。这就是"利用信道结构先验"。</p>
+<h3 id="cpe">逐符号残余相位跟踪（CPE）<a class="headerlink" href="#cpe" title="Permanent link">&para;</a></h3>
+<p>CFO 估计有残差，随时间累积成相位斜坡；定时偏差/抖动在频域引入随载波
+线性变化的相位斜坡，其公共分量也表现为残余相位误差。
+每个数据符号用 4 个导频做<strong>相干合并</strong>估公共相位误差：</p>
+<div class="arithmatex">\[
+\hat\theta=\angle\sum_{p\in\mathcal P}\frac{Y_p}{D_p}\,\hat H_p^{*}
+\]</div>
+<p><strong>为什么不能写 <code>mean(Y_p/(D_p·H_p))</code></strong>：深衰落导频上 <span class="arithmatex">\(|H|\approx0\)</span>，
+噪声被 <span class="arithmatex">\(1/|H|\)</span> 放大，一个坏导频毁掉整个 CPE。乘 <span class="arithmatex">\(\hat H^*\)</span> 后每项
+贡献权重正比 <span class="arithmatex">\(|H|^2\)</span>——弱导频自动降权（信道状态信息加权的微缩版）。
+这是调试中真实抓到的问题：某导频恰好坐在信道零点，朴素平均给出
+2.8 rad 的 CPE 误差，比不校正还糟。</p>
+<h2 id="_4">代码走读（按调用顺序）<a class="headerlink" href="#_4" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><span class="n">frame</span> <span class="o">=</span> <span class="n">ofdm_tx</span><span class="p">(</span><span class="n">bits</span><span class="p">)</span>          <span class="c1"># sync_preamble + training + ofdm_modulate(加CP)</span>
+<span class="c1"># ... 过信道 + 噪声 ...</span>
+<span class="n">syms</span> <span class="o">=</span> <span class="n">ofdm_rx</span><span class="p">(</span><span class="n">rx_wave</span><span class="p">)</span>       <span class="c1"># 前导匹配滤波+首径回扫 -&gt; CFO -&gt; derotate</span>
+                              <span class="c1"># -&gt; FFT窗(偏早2) -&gt; LS估计+时域降噪</span>
+                              <span class="c1"># (S&amp;C 度量只算给演示图，定时全靠匹配滤波)</span>
+                              <span class="c1"># -&gt; 逐符号 CPE 校正 -&gt; 除以 H_hat</span>
+</code></pre></div>
+<h2 id="_5">实验结果<a class="headerlink" href="#_5" title="Permanent link">&para;</a></h2>
+<p><code>exp04_ofdm_link.py</code>：瑞利 9 抽头多径 + CFO <span class="arithmatex">\(3\times10^{-3}\)</span>，无编码 QPSK。</p>
+<ul>
+<li>干净信道回环：误符号率 0；多径+CFO 无噪声：0。</li>
+<li>BER 曲线见 <code>assets/ofdm_ber.png</code>：低 SNR 下 OFDM 反而优于单载波
+  （有限长 MMSE 均衡器在低 SNR 退化为匹配滤波，残留 ISI 不除；
+  OFDM 把 ISI 化成每个载波上的平坦衰落，逐个补偿）；高 SNR
+  下残留 ~1% 误码来自<strong>深衰落载波上的迫零噪声放大</strong>——这正是"OFDM
+  必须配信道编码+载波间交织"的理由（模块 04 的卷积码+交织恰好是解药，
+  WiFi 的 BCC 编码就是这么做的）。</li>
+</ul>
+<p><img alt="OFDM vs 单载波 BER" src="../../assets/ofdm_ber.png" />
+<img alt="S&amp;C 度量 / 信道估计 / 均衡星座" src="../../assets/ofdm_internals.png" /></p>
+<h2 id="_6">面试可能怎么问<a class="headerlink" href="#_6" title="Permanent link">&para;</a></h2>
+<p><strong>Q：为什么 OFDM 需要 CP？CP 多长合适？</strong>
+A：CP 把线性卷积变成循环卷积，让 DFT 对角化信道矩阵；长度要 ≥ 信道
+最大时延扩展。代价是带宽效率损失 <span class="arithmatex">\(N_{cp}/(N+N_{cp})\)</span>。CP 不够长会引入
+残余 ISI+ICI——本项目实测：CP=16 时信道拖尾 <span class="arithmatex">\(L\le N_{cp}+1=17\)</span> 理论上
+无 ISI，留余量取 9 抽头实验安全；拖尾一旦超过 CP，ISI/ICI 进窗任何
+同步位置都救不回来。</p>
+<p><strong>Q：S&amp;C 定时的平台问题怎么解决？</strong>
+A：平台宽约 <span class="arithmatex">\(N_{cp}\)</span>、峰不锐利，多径下中点漂移。工程上要么加权化/差
+分化，要么像本项目：S&amp;C 只给粗范围，再匹配滤波已知前导 + 首径检测
+精确定位（802.11 用长前导互相关）。</p>
+<p><strong>Q：FFT 窗偏了会怎样？</strong>
+A：偏早合法但有上界（偏早量 <span class="arithmatex">\(\le N_{cp}-(L-1)\)</span>：窗内完整装下信道拖尾，
+循环移位才被 <span class="arithmatex">\(H\)</span> 吸收成线性相位项）；
+偏晚=灾难（抓到下一符号的 CP，ISI 直接进窗）。所以接收机显式偏 2 个
+采样——宁早勿晚。</p>
+<p><strong>Q：OFDM 的弱点？</strong>
+A：PAPR 高（多载波叠加峰均比大，功放回退损失）、对 CFO/相位噪声敏感
+（子载波正交性靠频率精度）、深衰落载波上 ZF 噪声放大（要编码交织
+补偿）、CP 是纯开销。</p>
+<p><strong>Q：导频干什么用？</strong>
+A：估残余公共相位误差（CFO 残差+定时抖动+相位噪声）。本项目踩过的坑：
+朴素 <code>mean</code> 会被深衰落导频带飞，要相干合并按 <span class="arithmatex">\(|H|^2\)</span> 加权——信道
+状态信息加权思想的微缩版。</p>
+<p><strong>Q：OFDM 和单载波均衡怎么选？</strong>
+A：信道时延扩展长、想省均衡复杂度 → OFDM（每载波一个除法）；信道接近
+平坦、怕 PAPR/频偏 → 单载波+时域均衡。5G 下行用 OFDM，上行考虑 PAPR
+用了 DFT-s-OFDM（SC-FDMA）。</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  回到页面顶部
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.sections", "navigation.top", "toc.follow", "content.code.copy"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "\u5df2\u590d\u5236", "clipboard.copy": "\u590d\u5236", "search.result.more.one": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.more.other": "\u5728\u8be5\u9875\u4e0a\u8fd8\u6709 # \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.none": "\u6ca1\u6709\u627e\u5230\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.one": "\u627e\u5230 1 \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.other": "# \u4e2a\u7b26\u5408\u6761\u4ef6\u7684\u7ed3\u679c", "search.result.placeholder": "\u952e\u5165\u4ee5\u5f00\u59cb\u641c\u7d22", "search.result.term.missing": "\u7f3a\u5c11", "select.version": "\u9009\u62e9\u5f53\u524d\u7248\u672c"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      
+        <script src="../../javascripts/katex.js"></script>
+      
+        <script src="https://unpkg.com/katex@0/dist/katex.min.js"></script>
+      
+        <script src="https://unpkg.com/katex@0/dist/contrib/auto-render.min.js"></script>
+      
+    
+  </body>
+</html>

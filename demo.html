@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>物理层交互演示 · PHY-Layer-Sim-AMC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Noto+Sans+SC:wght@400;500;700&family=Space+Grotesk:wght@500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0d1117;--bg2:#010409;--panel:#161b22;--panel2:#1c2330;
+  --line:#2b3440;--line2:rgba(255,255,255,.07);
+  --fg:#e6edf3;--mut:#8b949e;--faint:#59616f;
+  --acc:#58a6ff;--acc-hi:#79b8ff;--acc-soft:rgba(88,166,255,.13);
+  --ok:#3fb950;--warn:#d29922;--bad:#f85149;
+  --maxw:1520px;
+  --disp:"Space Grotesk","Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei",sans-serif;
+  --body:"Inter","Noto Sans SC","Noto Sans CJK SC","PingFang SC","Microsoft YaHei","WenQuanYi Zen Hei",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+*{box-sizing:border-box}
+html{scrollbar-color:var(--line) var(--bg)}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--body);line-height:1.65;-webkit-font-smoothing:antialiased}
+header{max-width:var(--maxw);margin:0 auto;padding:34px 28px 18px;border-bottom:1px solid var(--line)}
+h1{font-family:var(--disp);font-size:27px;font-weight:600;letter-spacing:-.02em;margin:0 0 8px}
+.sub{color:var(--mut);font-size:13.5px;max-width:78ch}
+.sub a{color:var(--acc-hi);text-decoration:none}
+.sub a:hover{text-decoration:underline}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+.chip{font-family:var(--mono);font-size:11.5px;color:var(--acc-hi);background:var(--acc-soft);border:1px solid rgba(88,166,255,.25);padding:3px 10px;border-radius:999px}
+.chip.dim{color:var(--mut);background:var(--panel2);border-color:var(--line)}
+.wrap{display:grid;grid-template-columns:272px 1fr;gap:16px;max-width:var(--maxw);margin:0 auto;padding:18px 28px 30px}
+@media(max-width:960px){.wrap{grid-template-columns:1fr}.ctrl{position:static}}
+.ctrl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;position:sticky;top:18px;align-self:start}
+.ctrl h2{font-family:var(--disp);font-size:15px;font-weight:600;margin:0 0 14px;color:var(--fg);letter-spacing:.01em}
+.ctrl h2::before{content:"";display:inline-block;width:8px;height:8px;border-radius:2px;background:var(--acc);margin-right:8px;vertical-align:1px}
+.field{margin-bottom:15px}
+.field label{display:flex;justify-content:space-between;align-items:baseline;font-size:12.5px;color:var(--mut);margin-bottom:6px}
+.field label b{color:var(--acc-hi);font-weight:500;font-family:var(--mono);font-size:11.5px;background:var(--acc-soft);padding:1px 8px;border-radius:6px;white-space:nowrap}
+input[type=range]{width:100%;accent-color:var(--acc);cursor:pointer}
+select,input[type=checkbox]{accent-color:var(--acc)}
+select{width:100%;background:var(--bg2);color:var(--fg);border:1px solid var(--line);border-radius:8px;padding:7px 8px;font-size:13px;font-family:var(--body)}
+.chk{display:flex;gap:8px;align-items:center;font-size:12.5px;color:var(--mut);padding:6px 0}
+button{width:100%;margin-top:8px;background:var(--acc);color:#06223f;border:0;border-radius:8px;padding:9px;font-weight:600;font-size:13px;cursor:pointer;font-family:var(--body);transition:background .15s}
+button:hover{background:var(--acc-hi)}
+.hint{margin-top:12px;padding-top:12px;border-top:1px dashed var(--line);font-size:11.5px;color:var(--faint);line-height:1.6}
+.hint code{font-family:var(--mono);color:var(--mut);font-size:10.5px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(360px,1fr));gap:16px;align-items:start}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 16px 14px}
+.card h3{margin:0 0 5px;font-size:14px;font-weight:600;color:var(--fg);letter-spacing:.01em}
+.card h3 .tag{font-family:var(--mono);font-size:10px;font-weight:500;color:var(--faint);border:1px solid var(--line);border-radius:5px;padding:1px 6px;margin-left:8px;vertical-align:2px}
+.card p{margin:0 0 10px;font-size:12px;color:var(--mut);line-height:1.6}
+.card p b{color:var(--fg);font-weight:500}
+canvas{width:100%;display:block;background:#0b0e13;border:1px solid var(--line2);border-radius:8px}
+.metrics{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.m{font-size:11.5px;color:var(--mut);background:var(--bg2);border:1px solid var(--line);border-radius:7px;padding:3px 10px}
+.m b{color:var(--fg);font-family:var(--mono);font-weight:500;margin-left:4px}
+.explain{max-width:var(--maxw);margin:0 auto;padding:0 28px 34px}
+.explain .inner{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:22px}
+.explain h3{font-family:var(--disp);font-size:16px;font-weight:600;margin:0 0 14px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:8px 26px;font-size:12.5px;color:var(--mut);line-height:1.7}
+@media(max-width:760px){.cols{grid-template-columns:1fr}}
+.cols b{color:var(--fg);font-weight:600}
+.cols i{font-style:normal;color:var(--acc-hi);font-family:var(--mono);font-size:11px}
+.fig{margin-top:18px}
+.fig .figbox{background:#f6f8fa;border-radius:12px;padding:14px;border:1px solid var(--line)}
+.fig img{width:100%;display:block;border-radius:6px}
+.fig .cap{font-size:11.5px;color:var(--faint);margin-top:8px;font-family:var(--mono)}
+.foot{max-width:var(--maxw);margin:0 auto;padding:0 28px 26px;font-size:11.5px;color:var(--faint);font-family:var(--mono)}
+</style>
+</head>
+<body>
+<header>
+<h1>物理层链路交互演示</h1>
+<div class="sub">浏览器里实时跑完整链路：调制 → RRC 成型 → 多径 / CFO / AWGN → 匹配滤波 → MMSE 均衡 → 判决。拖动左侧滑块，观察星座、眼图、误码率如何响应每一种信道损伤。<a href="./index.html">← 回到讲解文档</a> · <a href="https://github.com/YZml1507/phy-layer-sim-amc">代码仓库</a></div>
+<div class="chips"><span class="chip">纯 JS · 零依赖</span><span class="chip">实时 4096 符号</span><span class="chip dim">URL hash 可复现，如 #mod=64qam&amp;snr=-4&amp;mp=severe&amp;eq=1</span></div>
+</header>
+<div class="wrap">
+<aside class="ctrl">
+<h2>链路参数</h2>
+<div class="field"><label>调制方式 <b id="vMod">QPSK</b></label>
+<select id="mod">
+<option value="bpsk">BPSK</option><option value="qpsk" selected>QPSK</option>
+<option value="8psk">8PSK</option><option value="16qam">16QAM</option><option value="64qam">64QAM</option>
+</select></div>
+<div class="field"><label>信噪比 Es/N0 <b id="vSnr">20 dB</b></label>
+<input type="range" id="snr" min="-4" max="30" step="1" value="20"></div>
+<div class="field"><label>载波频偏 CFO <b id="vCfo">0</b></label>
+<input type="range" id="cfo" min="0" max="1000" step="10" value="0"></div>
+<div class="field"><label>滚降系数 β <b id="vBeta">0.35</b></label>
+<input type="range" id="beta" min="0.10" max="0.90" step="0.05" value="0.35"></div>
+<div class="field"><label>多径信道 <b id="vMp">关闭</b></label>
+<select id="mp">
+<option value="off">关闭（纯 AWGN）</option>
+<option value="mild">轻多径（3 抽头）</option>
+<option value="severe">重多径（5 抽头深衰落）</option>
+</select></div>
+<div class="field"><label>定时偏差 <b id="vDt">0 样点</b></label>
+<input type="range" id="dt" min="-1" max="1" step="1" value="0"></div>
+<div class="field chk"><input type="checkbox" id="eq"><label for="eq">开 MMSE 均衡（多径时有效）</label></div>
+<button id="rerun">换一批数据</button>
+<div class="hint">每个滑块对应一种真实损伤。改任意参数即重跑一批 4096 符号；<code>#参数</code> 可分享当前状态。</div>
+</aside>
+<main class="grid">
+<div class="card"><h3>星座图<span class="tag">接收端采样点</span></h3><p>灰点=理想星座，亮点=判决前采样，绿点=均衡后。拖 SNR 看点云散开；拖 CFO 看星座整体旋转成环；开多径看 ISI 拖尾，勾均衡看绿点收拢。</p><canvas id="cvConst" width="640" height="520"></canvas><div class="metrics"><span class="m">SER<b id="ser">—</b></span><span class="m">BER<b id="ber">—</b></span><span class="m">EVM<b id="evm">—</b></span></div></div>
+<div class="card"><h3>眼图<span class="tag">匹配滤波输出实部</span></h3><p>波形按 2 个符号周期切片叠画，中央红虚线=理想采样（判决）时刻。眼睛张开度=定时+噪声+ISI 余量：拖 β 看眼皮厚薄，加定时偏差看眼闭。</p><canvas id="cvEye" width="640" height="360"></canvas></div>
+<div class="card"><h3>BER 瀑布线<span class="tag">理论 vs 实测</span></h3><p>蓝线=该调制在纯 AWGN 下的理论 BER；红点=当前参数下 4096 符号实测（x 轴=Es/N0，同滑块）。<b>纯 AWGN 时红点应贴着线</b>（±蒙特卡洛抖动）；加损伤后点会离开线，虚线到曲线的距离即损伤代价，Δ 标注等效 SNR 代价（正=损失；负=优于理论，多径+均衡的分集增益偶尔出现）。0 错误时画空心下界标记（BER≲1/(N·k)，~63% 置信）。低 SNR 或高阶 QAM 下理论式本身是近邻近似（并集界），实测点略高于线为近似式固有误差，不是仿真错误。</p><canvas id="cvBer" width="680" height="400"></canvas></div>
+<div class="card"><h3>多径冲激响应<span class="tag">|h[n]|</span></h3><p>当前信道抽头（单位功率归一）。多径越重、抽头越多，ISI 越狠，均衡越必要。</p><canvas id="cvChan" width="640" height="300"></canvas></div>
+</main>
+</div>
+<section class="explain"><div class="inner">
+<h3>这张图在教什么</h3>
+<div class="cols">
+<div><b>损伤→观测量：</b>SNR=AWGN 热噪声（点云散开）；CFO=收发晶振差（星座整体旋转）；β=成型滤波器"带宽–定时鲁棒性"权衡；多径=抽头延迟线引入 ISI；定时偏差=没采在奈奎斯特点。</div>
+<div><b>实测点为什么不一定在线上：</b>蓝线是纯 AWGN 理论值——损伤为 0 时实测点才贴线（±统计抖动）；多径/CFO/定时偏差造成的性能代价，体现为红点离曲线的距离（Δ 标注）。这正是"仿真验证理论"的标准做法。</div>
+<div><b>建议的玩法：</b><i>重多径</i> → 星座拖散、BER 飘高 → 勾 <i>MMSE 均衡</i> → 绿点收拢、Δ 回落——就是模块 07 干的事。SNR 拉到 -4dB 看星座糊掉、BER≈0.5。</div>
+<div><b>AMC 调制识别（Kaggle T4）：</b>同一套链路旁路生成训练数据，1D-ResNet 学到的混淆结构与教科书一致——PSK 族内、QAM 族内互相混淆。</div>
+</div>
+<div class="fig"><div class="figbox"><img src="assets/amc_eval_gpu.png" alt="AMC 混淆矩阵与准确率-SNR 曲线（Kaggle T4 训练）"></div>
+<div class="cap">fig: amc_eval_gpu.png — 1D-ResNet 在混合 SNR 下 acc=0.77；混淆集中在 PSK 族内与 QAM 族内。</div></div>
+</div></section>
+<div class="foot">docs/demo.html · 纯前端仿真，每次刷新重采一批数据 · URL hash 参数可复现链路状态</div>
+<script>
+"use strict";
+// ---------- 复数与随机 ----------
+const C=(r,i)=>({r,i}); const cadd=(a,b)=>C(a.r+b.r,a.i+b.i);
+const cmul=(a,b)=>C(a.r*b.r-a.i*b.i,a.r*b.i+a.i*b.r);
+const cabs2=a=>a.r*a.r+a.i*a.i;
+let seed=12345;
+function rnd(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296}
+function gauss(){let u=0,v=0;while(!u)u=rnd();while(!v)v=rnd();return Math.sqrt(-2*Math.log(u))*Math.cos(2*Math.PI*v)}
+// ---------- RRC ----------
+function rrcTaps(beta,span,sps){
+  const n=span*sps,h=new Float64Array(n+1);let e=0;
+  for(let i=0;i<=n;i++){const t=(i-n/2)/sps;let v;
+    if(Math.abs(t)<1e-9)v=1-beta+4*beta/Math.PI;
+    else if(Math.abs(Math.abs(t)-1/(4*beta))<1e-6){
+      // t=±1/(4β) 奇异点，用标准教科书闭式极限值
+      v=(beta/Math.sqrt(2))*((1+2/Math.PI)*Math.sin(Math.PI/(4*beta))+(1-2/Math.PI)*Math.cos(Math.PI/(4*beta)));
+    } else {
+      const num=Math.sin(Math.PI*t*(1-beta))+4*beta*t*Math.cos(Math.PI*t*(1+beta));
+      const den=Math.PI*t*(1-16*beta*beta*t*t);
+      v=num/den;
+    }
+    h[i]=v;e+=v*v;}
+  for(let i=0;i<=n;i++)h[i]/=Math.sqrt(e);
+  return h;
+}
+function fir(x,h){ // x: {r:Float64Array,i:Float64Array}
+  const N=x.r.length,M=h.length,y={r:new Float64Array(N+M-1),i:new Float64Array(N+M-1)};
+  for(let n=0;n<N+M-1;n++){let sr=0,si=0;
+    const lo=Math.max(0,n-M+1),hi=Math.min(n,N-1);
+    for(let k=lo;k<=hi;k++){const c=h[n-k];sr+=x.r[k]*c;si+=x.i[k]*c;}
+    y.r[n]=sr;y.i[n]=si;}
+  return y;
+}
+// ---------- 星座 ----------
+function pamLevels(m){const L=[];for(let k=0;k<m;k++)L.push(2*k-m+1);return L}
+function grayOf(i){return i^(i>>1)}
+function modScheme(name){
+  if(name==="bpsk")return{M:2,k:1,pts:[C(-1,0),C(1,0)],kind:"psk",gray:[0,1]};
+  if(name==="qpsk")return{M:4,k:2,pts:[C(1,1),C(-1,1),C(-1,-1),C(1,-1)].map(p=>C(p.r/Math.SQRT2,p.i/Math.SQRT2)),kind:"psk",gray:[0,1,3,2]};
+  if(name==="8psk"){const pts=[];for(let i=0;i<8;i++)pts.push(C(Math.cos(2*Math.PI*i/8),Math.sin(2*Math.PI*i/8)));return{M:8,k:3,pts,kind:"psk",gray:pts.map((_,i)=>grayOf(i))}}
+  const M=name==="16qam"?16:64,m=Math.sqrt(M),k=Math.log2(M),levs=pamLevels(m);
+  const pts=[];for(let qi=0;qi<m;qi++)for(let ii=0;ii<m;ii++)pts.push(C(levs[ii],levs[qi]));
+  const norm=Math.sqrt(2*(m*m-1)/3);
+  // 每轴独立格雷：I 占低 k/2 位、Q 占高 k/2 位
+  const gray=pts.map((_,i)=>{const qi=(i/m)|0,ii=i%m;return(grayOf(qi)<<(k/2))|grayOf(ii);});
+  return{M,k,pts:pts.map(p=>C(p.r/norm,p.i/norm)),kind:"qam",m,levs:levs.map(v=>v/norm),norm,gray};
+}
+function draw(canvas,fn){const g=canvas.getContext("2d"),W=canvas.width,H=canvas.height;
+  g.fillStyle="#0b0e13";g.fillRect(0,0,W,H);fn(g,W,H);}
+function axes(g,W,H,pad){g.strokeStyle="#21262d";g.lineWidth=1;g.beginPath();
+  for(let i=0;i<=4;i++){const x=pad+(W-2*pad)*i/4;g.moveTo(x,pad);g.lineTo(x,H-pad);}
+  for(let i=0;i<=4;i++){const y=pad+(H-2*pad)*i/4;g.moveTo(pad,y);g.lineTo(W-pad,y);}g.stroke();
+  g.strokeStyle="#30363d";g.beginPath();g.moveTo(pad,H/2);g.lineTo(W-pad,H/2);
+  g.moveTo(W/2,pad);g.lineTo(W/2,H-pad);g.stroke();}
+// ---------- 主仿真 ----------
+const NS=4096,SPS=4;
+function simulate(p){
+  const sch=modScheme(p.mod);
+  const symIdx=new Int32Array(NS);
+  for(let i=0;i<NS;i++)symIdx[i]=(rnd()*sch.M)|0;
+  const syms=Array.from({length:NS},(_,i)=>sch.pts[symIdx[i]]);
+  // 上采样
+  const up={r:new Float64Array(NS*SPS),i:new Float64Array(NS*SPS)};
+  for(let i=0;i<NS;i++){up.r[i*SPS]=syms[i].r;up.i[i*SPS]=syms[i].i;}
+  const h=rrcTaps(p.beta,8,SPS);
+  let tx=fir(up,h);
+  // 多径：符号间隔抽头（相当于在 sps 间隔上卷积）
+  let taps=[C(1,0)];
+  if(p.mp==="mild")taps=[C(1,0),C(0.35,0.12),C(-0.12,0.08)];
+  if(p.mp==="severe")taps=[C(0.9,0),C(-0.5,0.32),C(0.33,-0.2),C(0.15,0.28),C(-0.1,-0.06)];
+  const tsum=Math.sqrt(taps.reduce((s,t)=>s+cabs2(t),0));
+  taps=taps.map(t=>C(t.r/tsum,t.i/tsum));
+  const ch={r:new Float64Array(tx.r.length),i:new Float64Array(tx.r.length)};
+  for(let j=0;j<taps.length;j++){const off=j*SPS;
+    for(let n=off;n<tx.r.length;n++){ch.r[n]+=taps[j].r*tx.r[n-off]-taps[j].i*tx.i[n-off];
+      ch.i[n]+=taps[j].r*tx.i[n-off]+taps[j].i*tx.r[n-off];}}
+  let rx=ch;
+  // CFO
+  if(p.cfo>0){const w=2*Math.PI*p.cfo;
+    for(let n=0;n<rx.r.length;n++){const c=Math.cos(w*n),s=Math.sin(w*n);
+      const a=rx.r[n],b=rx.i[n];rx.r[n]=a*c-b*s;rx.i[n]=a*s+b*c;}}
+  // AWGN：每复数波形样点 σ² = Es/esn0；sigPow≈Es/sps（每 sps 样点含一个符号能量）
+  const sigPow=tx.r.reduce((s,v)=>s+v*v,0)/tx.r.length + tx.i.reduce((s,v)=>s+v*v,0)/tx.i.length;
+  const nVar=sigPow*SPS/Math.pow(10,p.snr/10);
+  for(let n=0;n<rx.r.length;n++){rx.r[n]+=gauss()*Math.sqrt(nVar/2);rx.i[n]+=gauss()*Math.sqrt(nVar/2);}
+  // 匹配滤波 + 抽取（gd=len(h)-1）
+  const mf=fir(rx,h);
+  const gd=h.length-1+p.dt; // 人为加定时偏差
+  const dec=[];
+  for(let i=0;i<NS;i++){const n=gd+i*SPS;if(n<mf.r.length)dec.push(C(mf.r[n],mf.i[n]));}
+  const eye={r:mf.r.slice(),i:mf.i.slice(),gd:h.length-1};
+  // MMSE 均衡（符号率，用已知 taps）
+  let eq=dec;
+  if(p.eq&&taps.length>1){
+    const Lw=2*taps.length+9;
+    eq=mmseEqC(dec,taps,Lw,nVar);
+  }
+  // 判决
+  let ser=0,ber=0,evm=0;
+  const decided=eq.map(z=>{
+    let bi=0,bd=1e9;
+    for(let i=0;i<sch.M;i++){const d=cabs2(C(z.r-sch.pts[i].r,z.i-sch.pts[i].i));if(d<bd){bd=d;bi=i;}}
+    return bi;});
+  for(let i=0;i<Math.min(decided.length,NS);i++){
+    if(decided[i]!==symIdx[i]){ser++;
+      // 误比特：格雷标签位差异数（相邻星座点差 1 bit）
+      let a=sch.gray[symIdx[i]],b=sch.gray[decided[i]],x=a^b;
+      while(x){ber+=x&1;x>>=1;}
+    }
+    const s=syms[i],z=eq[i];
+    evm+=cabs2(C(z.r-s.r,z.i-s.i));
+  }
+  const nE=Math.min(decided.length,NS);
+  return{sch,syms,dec,eq,taps,eye,nE,ser:ser/nE,ber:ber/(nE*sch.k),evm:Math.sqrt(evm/nE)};
+}
+// MMSE 均衡（复数版）：w = (H^H H + σ²I)^{-1} H^H e_d，全延迟扫取残差最小
+function mmseEqC(x,taps,Lw,sig2){
+  const Lh=taps.length,N=Lw+Lh-1;
+  let best=null,bestErr=1e18;
+  const A=new Float64Array(Lw*Lw*2); // 复数存 [re,im]
+  const b=new Float64Array(Lw*2);
+  for(let d=Math.floor(Lh/2);d<N-1;d++){
+    A.fill(0);b.fill(0);
+    for(let a=0;a<Lw;a++){
+      for(let c=0;c<Lw;c++){
+        let sr=0,si=0;
+        for(let i=0;i<N;i++){const i1=i-a,i2=i-c;
+          if(i1>=0&&i1<Lh&&i2>=0&&i2<Lh){
+            // (H^H H)[a,c] = Σ conj(h[i-a]) h[i-c]
+            sr+=taps[i1].r*taps[i2].r+taps[i1].i*taps[i2].i;
+            si+=taps[i1].r*taps[i2].i-taps[i1].i*taps[i2].r;}}
+        A[(a*Lw+c)*2]=sr;A[(a*Lw+c)*2+1]=si;}
+      A[(a*Lw+a)*2]+=sig2;
+      const i=d-a;
+      if(i>=0&&i<Lh){b[a*2]=taps[i].r;b[a*2+1]=-taps[i].i;} // conj
+    }
+    const w=cGaussSolve(A,b,Lw);
+    if(!w)continue;
+    let err=0;
+    for(let i=0;i<N;i++){let sr=0,si=0;
+      for(let l=0;l<Lw;l++){const j=i-l;
+        if(j>=0&&j<Lh){const tr=taps[j].r,ti=taps[j].i,wr=w[l*2],wi=w[l*2+1];
+          sr+=tr*wr-ti*wi;si+=tr*wi+ti*wr;}}
+      const t=(i===d)?1:0;err+=(sr-t)*(sr-t)+si*si;}
+    if(err<bestErr){bestErr=err;best={w,d};}
+  }
+  if(!best)return x;
+  // z[n]=Σ_l w[l]·x[n-l] ≈ x[n-d] → 符号 k 的均衡输出是 z[k+d]
+  const y=[];
+  for(let n=0;n<x.length;n++){let sr=0,si=0;
+    for(let l=0;l<Lw;l++){const idx=n+best.d-l;
+      if(idx>=0&&idx<x.length){const wr=best.w[l*2],wi=best.w[l*2+1];
+        sr+=x[idx].r*wr-x[idx].i*wi;si+=x[idx].r*wi+x[idx].i*wr;}}
+    y.push(C(sr,si));}
+  return y;
+}
+function gaussSolve(A,b,n){const M=Array.from({length:n},(_,i)=>{const row=new Float64Array(n+1);for(let j=0;j<n;j++)row[j]=A[i*n+j];row[n]=b[i];return row;});
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(Math.abs(M[r][c])>Math.abs(M[p][c]))p=r;
+    if(Math.abs(M[p][c])<1e-12)return null;[M[c],M[p]]=[M[p],M[c]];
+    for(let r=c+1;r<n;r++){const f=M[r][c]/M[c][c];for(let j=c;j<=n;j++)M[r][j]-=f*M[c][j];}}
+  const x=new Float64Array(n);
+  for(let i=n-1;i>=0;i--){let s=M[i][n];for(let j=i+1;j<n;j++)s-=M[i][j]*x[j];x[i]=s/M[i][i];}
+  return x;}
+function cGaussSolve(A,b,n){ // 复高斯消元
+  const M=Array.from({length:n},(_,i)=>{const row=[];
+    for(let j=0;j<n;j++)row.push(C(A[(i*n+j)*2],A[(i*n+j)*2+1]));row.push(C(b[i*2],b[i*2+1]));return row;});
+  const cdiv=(a,b)=>{const d=b.r*b.r+b.i*b.i||1e-18;return C((a.r*b.r+a.i*b.i)/d,(a.i*b.r-a.r*b.i)/d);};
+  const csub=(a,b)=>C(a.r-b.r,a.i-b.i);
+  for(let c=0;c<n;c++){let p=c;for(let r=c+1;r<n;r++)if(cabs2(M[r][c])>cabs2(M[p][c]))p=r;
+    if(cabs2(M[p][c])<1e-16)return null;[M[c],M[p]]=[M[p],M[c]];
+    for(let r=c+1;r<n;r++){const f=cdiv(M[r][c],M[c][c]);
+      for(let j=c;j<=n;j++)M[r][j]=csub(M[r][j],cmul(f,M[c][j]));}}
+  const x=new Float64Array(n*2);
+  for(let i=n-1;i>=0;i--){let s=M[i][n];for(let j=i+1;j<n;j++)s=csub(s,cmul(M[i][j],C(x[j*2],x[j*2+1])));
+    const v=cdiv(s,M[i][i]);x[i*2]=v.r;x[i*2+1]=v.i;}
+  return x;}
+// ---------- 画图 ----------
+function drawConst(res,p){
+  draw(document.getElementById("cvConst"),(g,W,H)=>{
+    const pad=26,R=Math.min(W,H)/2-pad,cx=W/2,cy=H/2;
+    const sc=R/1.7;
+    axes(g,W,H,pad);
+    // 接收点（子采样显示），钳制在坐标区内
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
+    const pts=p.eq?res.eq:res.dec;
+    g.fillStyle=p.eq?"rgba(63,185,80,.55)":"rgba(88,166,255,.5)";
+    for(let i=0;i<pts.length;i+=2){const z=pts[i];
+      g.beginPath();g.arc(cx+z.r*sc,cy-z.i*sc,1.6,0,7);g.fill();}
+    // 均衡前后对比时画暗的原始点
+    if(p.eq&&res.dec){g.fillStyle="rgba(88,166,255,.25)";
+      for(let i=0;i<res.dec.length;i+=3){const z=res.dec[i];
+        g.beginPath();g.arc(cx+z.r*sc,cy-z.i*sc,1.4,0,7);g.fill();}}
+    g.restore();
+    // 理想星座画最上层作参照
+    g.fillStyle="#484f58";
+    for(const pt of res.sch.pts){g.beginPath();g.arc(cx+pt.r*sc,cy-pt.i*sc,5,0,7);g.fill();}
+  });
+}
+function drawEye(res){
+  draw(document.getElementById("cvEye"),(g,W,H)=>{
+    const pad=10,cy=H/2,seg=2*SPS,win=seg*40;
+    // 每个 2T 窗以符号判决时刻为中心 → 理想采样点在图中央
+    const start=res.eye.gd+10*SPS-SPS;
+    const mx=Math.max(...res.eye.r.slice(start,start+win+seg).map(Math.abs),0.5);
+    axes(g,W,H,pad);
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
+    g.strokeStyle="rgba(88,166,255,.6)";g.lineWidth=1;
+    for(let s=0;s+seg<win;s+=seg){
+      g.beginPath();
+      for(let i=0;i<=seg;i++){const v=res.eye.r[start+s+i]/mx;
+        const x=pad+(W-2*pad)*i/seg,y=cy-v*(H/2-pad);
+        i?g.lineTo(x,y):g.moveTo(x,y);}
+      g.stroke();}
+    g.restore();
+    // 理想采样时刻（判决点）虚线
+    g.strokeStyle="rgba(248,81,73,.55)";g.setLineDash([4,4]);g.beginPath();
+    g.moveTo(W/2,pad);g.lineTo(W/2,H-pad);g.stroke();g.setLineDash([]);
+  });
+}
+function drawChan(res){
+  draw(document.getElementById("cvChan"),(g,W,H)=>{
+    const pad=30,n=res.taps.length;
+    const mx=Math.max(...res.taps.map(t=>Math.sqrt(cabs2(t))),1e-9);
+    g.strokeStyle="#30363d";g.beginPath();g.moveTo(pad,H-pad);g.lineTo(W-pad,H-pad);g.stroke();
+    const bw=(W-2*pad)/n;
+    for(let j=0;j<n;j++){const v=Math.sqrt(cabs2(res.taps[j]))/mx;
+      const x=pad+j*bw+bw*0.2;
+      g.fillStyle="#58a6ff";g.fillRect(x,H-pad-v*(H-2*pad),bw*0.6,v*(H-2*pad));
+      g.fillStyle="#8b949e";g.font="11px 'JetBrains Mono',monospace";g.fillText("h"+j,x+2,H-pad+14);}
+  });
+}
+function theoryBer(sch,ebn0db){
+  const ebn0=Math.pow(10,ebn0db/10);
+  if(sch.kind==="psk"){
+    if(sch.M===2)return 0.5*erfc(Math.sqrt(ebn0));
+    if(sch.M===4)return 0.5*erfc(Math.sqrt(ebn0));
+    const gam=ebn0*sch.k;
+    return erfc(Math.sqrt(gam)*Math.sin(Math.PI/sch.M))/sch.k;
+  }
+  const m=Math.sqrt(sch.M);
+  const arg=Math.sqrt(3*sch.k*ebn0/(sch.M-1));
+  return 4/sch.k*(1-1/m)*0.5*erfc(arg/Math.SQRT2);
+}
+function erfc(x){ // A&S 7.1.26 近似（|x| 求值后按符号折回）
+  const ax=Math.abs(x);
+  const t=1/(1+0.3275911*ax),a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429;
+  const p=t*(a1+t*(a2+t*(a3+t*(a4+t*a5))));
+  const v=p*Math.exp(-ax*ax);
+  return x>=0?v:2-v;}
+function drawBer(res,p){
+  draw(document.getElementById("cvBer"),(g,W,H)=>{
+    // x 轴 = Es/N0，范围与滑块全域一致 → 实测点水平方向永不出界
+    const pad=52,x0=-4,x1=30,ymin=1e-8,ymax=1;
+    const xs=v=>pad+(W-2*pad)*(v-x0)/(x1-x0);
+    const lys=v=>Math.log10(Math.min(Math.max(v,ymin),ymax));
+    const ys=v=>H-pad-(H-2*pad)*(lys(v)-lys(ymin))/(lys(ymax)-lys(ymin));
+    const k2db=10*Math.log10(res.sch.k);
+    const clampX=v=>Math.min(Math.max(v,pad),W-pad);
+    const clampY=v=>Math.min(Math.max(v,pad),H-pad);
+    // 网格与刻度
+    g.strokeStyle="#21262d";g.lineWidth=1;g.beginPath();
+    for(let e=0;e<=x1;e+=5){g.moveTo(xs(e),pad);g.lineTo(xs(e),H-pad);}
+    for(const e of[0,-1,-2,-3,-4,-5,-6,-7,-8]){const y=ys(Math.pow(10,e));g.moveTo(pad,y);g.lineTo(W-pad,y);}
+    g.stroke();
+    g.strokeStyle="#30363d";g.strokeRect(pad,pad,W-2*pad,H-2*pad);
+    g.fillStyle="#8b949e";g.font="10px 'JetBrains Mono',monospace";
+    for(let e=0;e<=x1;e+=5)g.fillText(e==0?"0":e+"",xs(e)-7,H-pad+15);
+    g.fillText("Es/N0 (dB)",W/2-24,H-8);
+    for(const e of[0,-1,-2,-3,-4,-5,-6,-7,-8])g.fillText("1e"+e,8,ys(Math.pow(10,e))+3);
+    g.save();g.beginPath();g.rect(pad,pad,W-2*pad,H-2*pad);g.clip();
+    // 理论曲线：轴是 Es/N0，公式吃 Eb/N0 → ebn0=e-10log10(k)；低于 ymin 段不画（瀑布线自然出界）
+    g.strokeStyle="#58a6ff";g.lineWidth=1.5;g.beginPath();
+    let pen=false;
+    for(let e=x0;e<=x1;e+=0.25){const b=theoryBer(res.sch,e-k2db);
+      if(b<ymin){pen=false;continue;}
+      const x=xs(e),y=ys(Math.min(b,ymax));
+      pen?g.lineTo(x,y):g.moveTo(x,y);pen=true;}
+    g.stroke();
+    // 实测点：x 严格等于滑块值；垂直虚线连到理论曲线，标注 SNR 差距
+    const mx=clampX(xs(p.snr));
+    const thAtX=theoryBer(res.sch,p.snr-k2db);
+    if(res.ber>0){
+      const my=clampY(ys(res.ber));
+      // ΔSNR：同 BER 下理论需要的 Es/N0（二分反解）；ber 须落在曲线值域内
+      let dTxt="";
+      const thLo=theoryBer(res.sch,x0-k2db); // 曲线左端最大值
+      if(res.ber>ymin&&res.ber<thLo){
+        let lo=x0,hi=x1; // theoryBer 关于 e 单调降
+        for(let i=0;i<40;i++){const mid=(lo+hi)/2;
+          theoryBer(res.sch,mid-k2db)>res.ber?lo=mid:hi=mid;}
+        dTxt=" Δ≈"+((p.snr-(lo+hi)/2)>=0?"+":"")+(p.snr-(lo+hi)/2).toFixed(1)+"dB";
+      }
+      g.strokeStyle="rgba(248,81,73,.5)";g.setLineDash([3,3]);g.beginPath();
+      g.moveTo(mx,my);g.lineTo(mx,clampY(ys(Math.min(thAtX,ymax))));g.stroke();g.setLineDash([]);
+      g.fillStyle="#f85149";g.beginPath();g.arc(mx,my,5.5,0,7);g.fill();
+      g.fillStyle="#e6edf3";g.font="11px 'JetBrains Mono',monospace";
+      const label="实测 "+res.ber.toExponential(1)+dTxt;
+      const tw=g.measureText(label).width;
+      const tx=mx+9+tw>W-pad?mx-9-tw:mx+9;
+      const lgX=W-pad-168-8,lgY=pad+8,lgB=lgY+52; // 图例矩形（与下方绘制处一致）
+      const ly=(tx+tw>lgX&&tx<lgX+168&&my-11<lgB+4)?lgB+13:my+3; // 与图例相交则挪到其下
+      g.fillText(label,tx,ly);
+    }else{
+      // 0 错误：log 轴画不了 0，标空心下界点 BER<1/(N·k)
+      const my=H-pad-4;
+      g.strokeStyle="#f85149";g.lineWidth=1.5;g.beginPath();g.arc(mx,my,5.5,0,7);g.stroke();
+      g.beginPath();g.moveTo(mx,my+5.5);g.lineTo(mx,my+11);g.lineTo(mx-3.5,my+7.5);g.moveTo(mx,my+11);g.lineTo(mx+3.5,my+7.5);g.stroke();
+      g.fillStyle="#e6edf3";g.font="11px 'JetBrains Mono',monospace";
+      const bound=(1/(res.nE*res.sch.k)).toExponential(1);
+      const label="实测 0 错 → BER≲"+bound;
+      const tw=g.measureText(label).width;
+      const tx=mx+9+tw>W-pad?mx-9-tw:mx+9;
+      g.fillText(label,tx,my-6);
+    }
+    g.restore();
+    // 图例（右上角半透明底板：瀑布线单调降，右上恒为空）
+    const lw=168,lh=52,lx=W-pad-lw-8,ly2=pad+8;
+    g.fillStyle="rgba(13,17,23,.82)";g.strokeStyle="rgba(88,166,255,.28)";g.lineWidth=1;
+    g.beginPath();g.roundRect(lx,ly2,lw,lh,7);g.fill();g.stroke();
+    g.strokeStyle="#58a6ff";g.lineWidth=2;g.beginPath();g.moveTo(lx+10,ly2+15);g.lineTo(lx+34,ly2+15);g.stroke();
+    g.fillStyle="#c9d1d9";g.font="11.5px 'Inter','Noto Sans SC',sans-serif";g.fillText("理论 BER(AWGN)",lx+40,ly2+19);
+    g.fillStyle="#f85149";g.beginPath();g.arc(lx+17,ly2+36,4.5,0,7);g.fill();
+    g.fillStyle="#c9d1d9";g.fillText("实测(4096符号)",lx+40,ly2+40);
+  });
+}
+// ---------- 主循环 ----------
+const $=id=>document.getElementById(id);
+function params(){
+  return{mod:$("mod").value,snr:+$("snr").value,cfo:+$("cfo").value/1e6*8,
+    beta:+$("beta").value,mp:$("mp").value,dt:+$("dt").value,eq:$("eq").checked};
+}
+function refresh(){
+  seed=(Math.random()*1e9)|0;
+  const p=params(),res=simulate(p);
+  drawConst(res,p);drawEye(res);drawBer(res,p);drawChan(res);
+  $("ser").textContent=res.ser>0?res.ser.toExponential(2):"<"+(1/res.nE).toExponential(1);
+  $("ber").textContent=res.ber>0?res.ber.toExponential(2):"<"+(1/(res.nE*res.sch.k)).toExponential(1);
+  $("evm").textContent=(res.evm*100).toFixed(1)+"%";
+}
+function labels(){
+  $("vMod").textContent=$("mod").selectedOptions[0].text;
+  $("vSnr").textContent=$("snr").value+" dB";
+  const cf=+$('cfo').value/1e6*8;
+  $("vCfo").textContent=cf?cf.toExponential(1)+" 周/样点":"0";
+  $("vBeta").textContent=$("beta").value;
+  $("vMp").textContent=$("mp").selectedOptions[0].text.split("（")[0];
+  $("vDt").textContent=$("dt").value+" 样点";
+}
+for(const id of["mod","snr","cfo","beta","mp","dt","eq"]){
+  $(id).addEventListener("input",()=>{labels();refresh();});
+}
+$("rerun").addEventListener("click",refresh);
+// URL hash 预设链路状态，可复现/分享，如 #mod=64qam&snr=-4&mp=severe&eq=1
+try{const hp=new URLSearchParams(location.hash.slice(1));
+  if(hp.get("mod"))$("mod").value=hp.get("mod");
+  if(hp.get("snr"))$("snr").value=hp.get("snr");
+  if(hp.get("cfo"))$("cfo").value=Math.round(+hp.get("cfo")*1e6/8); // hash 用物理单位 cyc/sample，滑块存 0-1000
+  if(hp.get("beta"))$("beta").value=hp.get("beta");
+  if(hp.get("mp"))$("mp").value=hp.get("mp");
+  if(hp.get("dt"))$("dt").value=hp.get("dt");
+  if(hp.get("eq"))$("eq").checked=hp.get("eq")==="1";
+}catch(e){}
+labels();refresh();
+</script>
+</body>
+</html>
