@@ -61,12 +61,13 @@ $K$ 因子 = LOS 功率 / 散射功率。$K\to\infty$ 退化为 AWGN，$K=0$ 退
 就把深衰落压掉近两个数量级。
 
 **相干带宽：频选多厉害可以量化**。抽头剖面的 rms 时延扩展
-$\sigma_\tau$（以符号周期计）决定信道的相干带宽
+$\sigma_\tau$（以样点计，抽头间隔=1 样点）决定信道的相干带宽
 $B_c\approx1/(2\pi\sigma_\tau)$：$B_c$ 以内频率分量同起同落（平坦），
-超出则独立起伏（频选）。本项目实测：mild 信道 $\sigma_\tau=1.08T_s\to
-B_c\approx0.15$ cyc/sample；severe $\sigma_\tau=1.35T_s\to B_c\approx0.12$。
+超出则独立起伏（频选）。本项目实测：exp03 mild 信道(5 抽头, decay=12dB)
+$\sigma_\tau=1.08$ 样点 $\to B_c\approx0.15$ cyc/sample；exp04 severe
+信道(9 抽头, decay=14dB) $\sigma_\tau=2.01$ 样点 $\to B_c\approx0.08$。
 这就是模块 08 设计 64 载波的定量依据：子载波间隔 $1/64=0.016$
-cyc/sample $\ll B_c$（宽进 B_c 里 7.5~9.4 倍），**每个子载波看到的
+cyc/sample $\ll B_c$（宽进 B_c 里 5~9 倍），**每个子载波看到的
 是平坦衰落**——OFDM 把频选信道切成平坦子信道的"充分条件"被数字
 验证了。
 

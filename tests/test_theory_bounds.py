@@ -77,7 +77,7 @@ def test_16qam_approx_matches_exact():
             + 0.5 * Q(3 * np.sqrt(0.8 * g))
             - 0.25 * Q(5 * np.sqrt(0.8 * g))
         )
-        assert approx == pytest.approx(exact, rel=0.02), f"Eb/N0={ebn0_db}dB 偏差>2%"
+        assert approx == pytest.approx(exact, rel=0.005), f"Eb/N0={ebn0_db}dB 偏差>0.5%"
 
 
 def test_conv_code_dfree_is_10():
@@ -93,7 +93,7 @@ def test_conv_code_dfree_is_10():
 
 
 def test_ofdm_ici_closed_form():
-    """docs/08: P_ICI = 1-|s_0|² ≈ (πε)²/3；ε=0.051 时 ≈ -20.7dB。"""
+    """docs/08: P_ICI = 1-|s_0|² ≈ (πε)²/3；exp04 的 ε=0.192 → ≈-9.4dB。"""
     N = 64
     for eps in [0.05, 0.1, 0.19]:
         m = np.arange(-N // 2, N // 2)
