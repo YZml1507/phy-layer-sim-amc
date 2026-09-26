@@ -117,6 +117,14 @@ def test_coherence_bandwidth_exceeds_ofdm_spacing():
         assert b_c > 5 / 64, f"L={L}: B_c={b_c:.3f} 未显著大于载波间隔"
 
 
+def test_natural_binary_neighbor_bit_errors():
+    """docs/02: 自然二进制标注的相邻电平错位均值 4-PAM=4/3、8-PAM≈1.57
+    （Gray=1.0 → 换自然码 BER 抬高 +33%/+57%）。"""
+    for m_pam, expect in [(4, 4 / 3), (8, 11 / 7)]:
+        diffs = [(i ^ (i + 1)).bit_count() for i in range(m_pam - 1)]
+        assert np.mean(diffs) == pytest.approx(expect)
+
+
 def test_rician_k_suppresses_deep_fades():
     """docs/05: P(|h|²<-10dB) 随 K 单调下降：K=0→9.5%, K=3→2.8%, K=10→0.1%。"""
     probs = {}
