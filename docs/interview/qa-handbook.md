@@ -122,10 +122,12 @@ cyc/sample，蒙特卡洛实测与界之比 1.02，**渐近达界**。LS 信道�
 估计器的"精度天花板"都是训练长度和 SNR 的显式函数，不是玄学。
 
 **Q：OFDM 对 CFO 到底有多敏感？给个数。**
-A：归一化频偏 $\epsilon=\Delta f T_u=0.051$（本项目 CFO）时 ICI 功率
-$\approx(\pi\epsilon)^2/3\approx-20.7$ dB——相当于给每载波钉了个
-~21dB 的有效 SNR 上限：QPSK 无感（SER~10⁻²⁷），但 64QAM 会留下约 3%
-的误符号地板。敏感性随调制阶数放大，所以高阶 QAM 系统的 CFO 预算最紧。
+A：exp04 注入 CFO $3\times10^{-3}$ 周/样点，归一化频偏 $\epsilon=\Delta f
+T_u=0.192$，ICI 功率 $=1-|s_0|^2\approx(\pi\epsilon)^2/3\approx-9.4$ dB——
+相当于给每载波钉了个 ~9.4dB 的有效 SNR 上限：QPSK 也有 ~3×10⁻³
+误符号地板，16QAM ~26%、64QAM ~70% 报废。而 Moose 补偿后残余
+$\epsilon\approx2\times10^{-3}$ → ICI ≈ −48dB 可忽略。敏感性随
+$\epsilon^2$ 和调制阶数一起放大，所以 OFDM 先补 CFO、高阶 QAM 频偏预算最紧。
 
 **Q：ZF 均衡什么时候会"炸"？**
 A：信道频谱有深凹点的时候。频域口径 ZF 输出噪声 ∝ $\sum 1/|H_k|^2$；
