@@ -26,6 +26,7 @@ theme:
 nav:
   - 首页: index.md
   - 交互演示: demo.html
+  - 数字复核清单: verification.md
   - 模块讲解:
     - 01 总览与架构: modules/01-overview.md
     - 02 数字调制与解调: modules/02-modulation.md

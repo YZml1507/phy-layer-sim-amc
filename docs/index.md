@@ -12,6 +12,8 @@
   纯 AWGN 下点应贴线（±蒙特卡洛抖动），加损伤后点离线的距离就是损伤代价（Δ 标注）。
   URL hash 参数可复现特定链路状态（如 `#mod=64qam&snr=-4&mp=severe&eq=1`）。
 - **面试手册**：预判追问与应答、简历条目、5 分钟 PPT 大纲。
+- **[数字复核清单](verification.md)**：文档里每条定量声称对应的 CI 测试名或一行
+  复现命令——被问"这个数字哪来的"直接按表复现。
 - 代码仓库：[github.com/YZml1507/phy-layer-sim-amc](https://github.com/YZml1507/phy-layer-sim-amc)
 
 ## 链路总览
