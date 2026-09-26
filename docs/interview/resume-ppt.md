@@ -19,6 +19,12 @@
 
 ## 5 分钟 PPT 大纲（复试陈述用）
 
+> **现成文件**：`docs/interview/phy-layer-sim-amc-复试陈述.pptx`——8 页
+> 16:9 成品（P1–P7 + 一页备用数字速查），已嵌入仓库实验图。
+> 重新生成：`pip install python-pptx && python3 tools/build_ppt.py`。
+> 改内容请同步改本页口播稿与速查卡，数字以 verification.md 为准。
+
+
 按 7 页安排，每页 ~40 秒：
 
 **P1 封面**：题目《基于 Python 的数字通信物理层仿真与智能调制识别》+
