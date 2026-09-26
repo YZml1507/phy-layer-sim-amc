@@ -41,6 +41,7 @@ nav:
   - 面试手册:
     - 追问预判与应答: interview/qa-handbook.md
     - 简历与 PPT 素材: interview/resume-ppt.md
+    - 临考速查卡: interview/cheat-sheet.md
 
 markdown_extensions:
   - admonition
