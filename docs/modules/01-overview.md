@@ -69,12 +69,13 @@ src/phylayer/
 ├── pulse_shaping.py   # RRC 滤波器、上采样
 ├── coding.py          # 卷积码 + Viterbi（硬/软判决）
 ├── channels.py        # AWGN、瑞利/莱斯多径、CFO、相位噪声
-├── sync.py            # 前导帧定时、CFO 估计、Costas 相位跟踪
+├── sync.py            # 前导帧定时、CFO 估计、LS 信道估计、Costas 相位跟踪
 ├── equalizer.py       # ZF / MMSE 均衡
-├── ofdm.py            # OFDM 收发机（含 Schmidl-Cox 定时）
-├── chan_est.py        # LS / DFT 插值 / LMMSE 信道估计
+├── ofdm.py            # OFDM 收发机（含 Schmidl-Cox 定时、导频 CPE）
+├── burst.py           # 突发链路组装：帧结构 + 完整接收流程
 ├── metrics.py         # BER / SER / EVM
-└── iqdata.py          # 带标注 I/Q 数据集生成
+├── iqdata.py          # 带标注 I/Q 数据集生成
+└── amc.py             # AMCNet：1D-ResNet 调制分类
 ```
 
 ## 怎么验证"仿真没写错"

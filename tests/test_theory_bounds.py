@@ -134,5 +134,5 @@ def test_rician_k_suppresses_deep_fades():
         probs[K] = ncx2.cdf(0.1 / sig2, 2, s2 / sig2)
     assert probs[0] == pytest.approx(0.095, abs=0.005)
     assert probs[3] == pytest.approx(0.028, abs=0.005)
-    assert probs[10] == pytest.approx(0.001, abs=0.0005)
+    assert probs[10] == pytest.approx(0.00074, abs=0.0002)
     assert probs[0] > probs[3] > probs[10]
