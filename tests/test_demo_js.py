@@ -11,6 +11,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
+import numpy as np
 import pytest
 
 DEMO = Path(__file__).parent.parent / "docs" / "demo.html"
@@ -96,6 +97,56 @@ def test_mmse_eq_recovers_severe_isi(demo_results):
 def test_cfo_destroys_link(demo_results):
     """CFO 8e-3 cyc/sample（≈11.5°/sym）下 QPSK SER 接近随机。"""
     assert demo_results["cfo"]["ser"] > 0.3
+
+
+def _python_chain(mod_name: str, esn0_db: float, n_sym: int = 4096, seed: int = 0):
+    """Python 侧镜像 demo.html simulate()：调制→上采样→RRC→AWGN→匹配滤波→抽取→硬判决。
+
+    噪声口径对照：JS `nVar=sigPow*sps/10^(snr/10)`（sigPow≈Es/sps）
+    等价于 `awgn(x, snr_for_waveform(esn0, sps))` 的 σ²=sigPow/10^(esn0−10log10 sps)/10。
+    """
+    from phylayer.channels import awgn, snr_for_waveform
+    from phylayer.metrics import ber, ser
+    from phylayer.modulation import Modem
+    from phylayer.pulse_shaping import fir_filter, rrc_taps, upsample
+
+    order = {"bpsk": 2, "qpsk": 4, "16qam": 16, "64qam": 64}[mod_name]
+    sps, span, beta = 4, 9, 0.35
+    # JS 用 rrcTaps(beta,8,SPS) 允许偶数 span（33 抽头）；Python rrc_taps 要求
+    # 奇数 span，取 9（36 抽头）。截断窗差一个符号周期，不影响 ISI-free 采样判决。
+    rng = np.random.default_rng(seed)
+    m = Modem(order)
+    bits = rng.integers(0, 2, n_sym * m.bits_per_symbol)
+    syms = m.modulate(bits)
+    h = rrc_taps(beta, span, sps)
+    x = fir_filter(upsample(syms, sps), h)
+    y = awgn(x, snr_for_waveform(esn0_db, sps), rng)
+    z = fir_filter(y, h)[len(h) - 1 :: sps][:n_sym]  # gd=len(h)-1，同 JS
+    return ber(bits, m.demodulate(z)), ser(syms, m.nearest(z))
+
+
+def test_js_python_parity(demo_results):
+    """demo JS 与 src/phylayer 是两套独立实现：同场景 BER/SER 应对拍一致。
+
+    期望错误数 ≥20 才断言（更低时分不清实现差异和蒙特卡洛抖动）；
+    8PSK 不在 Python Modem 支持集（方形 QAM）内，不在此对拍。
+    """
+    for key, r in demo_results.items():
+        if not key.startswith("awgn_"):
+            continue
+        name = key.split("_")[1]
+        if name not in ("bpsk", "qpsk", "16qam", "64qam"):
+            continue
+        if r["theory"] * r["nBits"] < 20:
+            continue
+        esn0_db = float(key.split("_")[2])
+        ber_py, ser_py = _python_chain(name, esn0_db)
+        # 独立种子、相同 SNR/链路：BER 与 SER 量级应一致（容忍带 ~4x）
+        for js_v, py_v, what in ((r["meas"], ber_py, "BER"), (r["ser"], ser_py, "SER")):
+            lo, hi = min(js_v, py_v), max(js_v, py_v)
+            assert lo > 0 and hi / lo < 4, (
+                f"{key} {what} 对拍失败: js={js_v:.3e} python={py_v:.3e}"
+            )
 
 
 def test_deterministic_seed(demo_results):
