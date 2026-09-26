@@ -17,6 +17,7 @@ Python 或实验脚本即可复现。
 | 相干带宽 B_c≈1/(2πσ_τ) ≫ 载波间隔 1/64（5~9 倍） | 05 | `pytest -k test_coherence_bandwidth` |
 | Ricean K 深衰落概率：K=0→9.5%、K=3→2.8%、K=10→0.1% | 05 | `pytest -k test_rician_k` |
 | 自然二进制相邻电平错位均值 4/3、11/7（Gray=1 → BER +33%/+57%） | 02 | `pytest -k test_natural_binary_neighbor` |
+| 演示页 JS 链路与 Python 库是两套独立实现：纯 AWGN 实测贴理论式、severe+均衡 SER 27%→<0.5%、CFO 8e-3 毁链（SER≈0.75）、EVM≈10^(−SNR/20) | demo | `pytest -k test_demo_js`（CI 里 node 实跑真实 JS） |
 
 ## 已有功能测试覆盖的声称
 
