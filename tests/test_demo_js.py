@@ -22,7 +22,7 @@ for(const m of ["bpsk","qpsk","8psk","16qam","64qam"]){
   for(const s of [10,16]){
     const r=run({mod:m,snr:s,cfo:0,beta:0.35,mp:"none",dt:0,eq:false});
     const th=theoryBer(r.sch, s-10*Math.log10(r.sch.k));
-    out["awgn_"+m+"_"+s]={meas:r.ber,theory:th,ser:r.ser,evm:r.evm};
+    out["awgn_"+m+"_"+s]={meas:r.ber,theory:th,ser:r.ser,evm:r.evm,nBits:r.nE*r.sch.k};
   }
 }
 const off=run({mod:"qpsk",snr:16,cfo:0,beta:0.35,mp:"severe",dt:0,eq:false});
@@ -69,14 +69,15 @@ def test_awgn_ber_tracks_theory(demo_results):
     for key, r in demo_results.items():
         if not key.startswith("awgn_"):
             continue
-        if r["theory"] > 1e-6:
-            assert 0 < r["meas"] < r["theory"] * 6, (
+        # 蒙特卡洛分辨率：期望错误数 <5 时 meas=0 完全合法（分辨不出更小的 BER）
+        exp_err = r["theory"] * r["nBits"]
+        if exp_err < 5:
+            assert r["meas"] < 5e-3, f"{key}: theory≈0 但 meas={r['meas']:.2e}"
+        else:
+            assert r["theory"] / 6 < r["meas"] < r["theory"] * 6, (
                 f"{key}: meas={r['meas']:.3e} theory={r['theory']:.3e} 偏离>6x"
             )
-            assert r["meas"] > r["theory"] / 6 or r["meas"] == 0
-        else:
-            assert r["meas"] < 5e-3, f"{key}: theory≈0 但 meas={r['meas']:.2e}"
-        assert r["ber"] <= r["ser"] + 1e-12, f"{key}: BER>SER 违反格雷一致"
+        assert r["meas"] <= r["ser"] + 1e-12, f"{key}: BER>SER 违反格雷一致"
 
 
 def test_evm_matches_snr(demo_results):
