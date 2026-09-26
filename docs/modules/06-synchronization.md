@@ -80,6 +80,20 @@ $$
 估计的原型）。去模糊范围 $|\Delta f|<1/(64\cdot sps)$，本项目 $8\times10^{-4}$
 远在范围内。
 
+**估计得有多准——方差界**：设半段长度 $L=32$、两段独立噪声，合并相位的
+误差方差为 $\mathrm{var}(\hat\phi)\approx 1/(L\cdot E_s/N_0)$；换回
+f̂（cycles/sample）要除以相位放大倍数 $(2\pi L\cdot sps)^2$：
+
+$$
+\mathrm{std}(\hat f)\approx\frac{1}{2\pi L\cdot sps\sqrt{L\cdot E_s/N_0}}
+$$
+
+代入 $L=32$、$sps=8$、$E_s/N_0=10$ dB：$\mathrm{std}(\hat f)\approx
+3.5\times10^{-5}$ cyc/sample，等效每符号相位抖动约 $0.10°$——蒙特卡洛
+500 次实测 std = 3.55e-5，与界之比 1.02，**这个估计量已达渐近界**
+（efficient）。数字也好记：残余 CFO 引起的星座转动每符号 ~0.1°，
+判决引导跟踪环（步长 0.15）轻松吃掉。
+
 **第 4 步 derotate**：符号级整帧乘 $e^{-j2\pi\hat f\,\mathrm{sps}\,k}$（$\hat f$ 单位是 cycles/sample，符号下标要乘 sps）把残余旋转拧回去。
 
 **第 5 步 estimate_channel_ls**：在整段前导（短+长）上解最小二乘 $y=Ph$（$P$ 是下
@@ -116,6 +130,11 @@ z = decision_directed_phase(eq_out, modem.nearest)  # DDPLL 残余相位跟踪
   PRACH 前导、DFT-s-OFDM 的 DM-RS 等处。
 - **CFO 估计的两段重复前导为什么好用？** 两段相同结构在 CFO 下的相位差
   正比于频偏和间距，一除就出来——Moose 方法，802.11a 的 CFO 原型。
+- **CFO 估计的精度极限是多少？**（追问预案）相位差方差 $\approx1/(L\cdot
+  E_s/N_0)$，f̂ 的标准差再除 $2\pi L sps$；本项目参数下约
+  $3.5\times10^{-5}$ cyc/sample ≈ 每符号 0.10°，蒙特卡洛实测与界之比
+  1.02——估计量渐近达界。再压精度只能加长 $L$（方差 $\propto 1/L^3$
+  量级收益）或换更宽间距的重复结构。
 - **符号定时偏差一点点会怎样？** 在匹配滤波输出上采错位置 → 收的不是
   Nyquist 无 ISI 点 → 星座散开（等效 SNR 损失）；β 越小越敏感（模块 03）。
 - **细同步找首径还是最强径？** 首径（帧起点语义）。最强径只是信道最强

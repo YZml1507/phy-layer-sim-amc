@@ -95,6 +95,30 @@ $$
 
 和模块 06 的 Moose 是同一个思想：重复结构把频偏转成可测相位差。
 
+**CFO 不补会怎样——ICI 定量**：以子载波间隔归一化的频偏
+$\epsilon=\Delta f\cdot T_u$（本项目 $8\times10^{-4}\times64\approx0.051$），
+载波 $l$ 的接收符号变为
+
+$$
+Y_l = s_0 X_l + \sum_{k\neq l}s_{l-k}X_k,\qquad
+s_m=\frac{\sin\pi(m+\epsilon)}{N\sin\frac{\pi(m+\epsilon)}{N}}
+$$
+
+有用信号被压成 $|s_0|^2\approx 1-(\pi\epsilon)^2/3$，泄漏出的能量即
+**载波间干扰 ICI**：由 Parseval，$\sum_m|s_m|^2=1$，所以
+
+$$
+P_{\mathrm{ICI}}=1-|s_0|^2\approx\frac{(\pi\epsilon)^2}{3}
+$$
+
+代入 $\epsilon=0.051$：ICI ≈ **−20.7 dB（0.86%）**——ICI 不可压，
+相当于把每个载波的有效 SNR **钉死在 ~21 dB 上限**。这个上限对 QPSK
+无所谓（SER ~10⁻²⁷），但对 64QAM 已压出约 3% 的误符号地板——CFO
+危害的严重程度随调制阶数放大，这正是 OFDM 必须先补偿 CFO、且高阶
+QAM 对频偏最敏感的定量理由。另外频偏的整数部分 $\epsilon\ge1$ 不是
+ICI 而是**载波整体错位**（导频/数据全挪一格），802.11a 靠长短前导
+两级估计分别覆盖。
+
 ### 信道估计与时域降噪
 
 训练符号全载波已知 → 逐载波 LS：
