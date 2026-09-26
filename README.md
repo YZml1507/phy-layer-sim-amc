@@ -38,7 +38,7 @@ experiments/       可复现实验脚本,结果图输出到 docs/assets/
 docs/              逐模块中文讲解文档(MkDocs Material)
   modules/         01-总览 ... 10-AMC
   interview/       面试追问手册 + 简历/PPT 素材
-tests/             与理论值对齐的数值验证测试(48 项)
+tests/             与理论值对齐的数值验证测试(56 项, 含理论界回归)
 notebooks/         Kaggle 一键训练 notebook(amc_kaggle.ipynb)
 ```
 
