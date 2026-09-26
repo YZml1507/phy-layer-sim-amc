@@ -78,7 +78,7 @@ def test_awgn_ber_tracks_theory(demo_results):
             assert r["theory"] / 6 < r["meas"] < r["theory"] * 6, (
                 f"{key}: meas={r['meas']:.3e} theory={r['theory']:.3e} 偏离>6x"
             )
-        assert r["meas"] <= r["ser"] + 1e-12, f"{key}: BER>SER 违反格雷一致"
+        assert r["meas"] <= r["ser"] + 1e-12, f"{key}: BER>SER 不自洽（误比特数不能多于误符号数）"
 
 
 def test_evm_matches_snr(demo_results):
